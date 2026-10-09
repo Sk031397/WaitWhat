@@ -1,0 +1,114 @@
+schema-version = 1
+
+[package]
+title = "SideKick"
+version = "1.0.0"
+id = "com.sidekick.viewingcompanion"
+icon = "@image/app_icon.png"
+
+[os.version]
+min = "1.2"
+target = "1.2"
+
+[needs]
+[[needs.module]]
+id = "/com.amazon.vega.os@IVega_1_2"
+
+# Audio playback privilege
+[[needs.privilege]]
+id = "com.amazon.system.audio"
+
+[[needs.module]]
+id = "/com.amazon.kepler.kepler_media_controls_1@IKeplerMediaControls_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.keplermediadescriptor_1@IKeplermediadescriptor_1"
+
+[[needs.module]]
+id = "/com.amazon.kepler.keplerscript_2@IKeplerScript_1"
+
+[[needs.module]]
+id = "/com.amazon.kepler.w3cmedia_2@IW3cmedia_3"
+
+[[needs.module]]
+id = "/com.amazon.kepler.safe_area_context_2@ISafeAreaContext_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.screens_2@IScreens_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.navigation__core_7@INavigation__Core_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.navigation__elements_7@INavigation__Elements_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.navigation__native_7@INavigation__Native_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.navigation__routers_7@INavigation__Routers_0"
+
+[[needs.module]]
+id = "/com.amazon.kepler.navigation__stack_7@INavigation__Stack_0"
+
+
+
+
+
+
+
+
+
+
+
+
+[wants]
+# ---- Core media services (required for W3C media playback) ----
+# Missing any of these causes SILENT playback failure.
+[[wants.service]]
+id = "com.amazon.media.server"
+
+[[wants.service]]
+id = "com.amazon.mediabuffer.service"
+
+[[wants.service]]
+id = "com.amazon.mediatransform.service"
+
+[[wants.service]]
+id = "com.amazon.mediametrics.service"
+
+[[wants.service]]
+id = "com.amazon.gipc.uuid.*"
+
+# ---- Audio services ----
+[[wants.service]]
+id = "com.amazon.audio.stream"
+
+[[wants.service]]
+id = "com.amazon.audio.control"
+
+# ---- Accessibility (required for captions) ----
+[[wants.privilege]]
+id = "com.amazon.devconf.privilege.accessibility"
+
+# ---- System keyboard / IME (enables TextInput + the keyboard mic for
+#      speech-to-text; this is the only app-usable STT path on VegaOS) ----
+[[wants.service]]
+id = "com.amazon.inputmethod.service"
+
+# ---- Network (required to fetch remote video over HTTPS and call the
+#      backend /ask endpoint). Without this, remote media silently fails. ----
+[[wants.service]]
+id = "com.amazon.network.service"
+
+[offers]
+# IPC UUID offering required by the media stack
+[[offers.service]]
+id = "com.amazon.gipc.uuid.*"
+
+[components]
+[[components.interactive]]
+id = "com.sidekick.viewingcompanion.main"
+runtime-module = "/com.amazon.kepler.keplerscript.runtime.loader_2@IKeplerScript_2_0"
+launch-type = "singleton"
+categories = ["com.amazon.category.main"]

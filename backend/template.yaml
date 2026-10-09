@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SideKick /ask endpoint — a Lambda behind a Function URL that grounds Amazon
+  Bedrock (Nova) with viewing context and returns 10-foot-friendly answers.
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: us.amazon.nova-lite-v1:0
+    Description: Bedrock model / inference profile id used by Converse.
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 256
+    Runtime: nodejs20.x
+
+Resources:
+  AskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handler.handler
+      CodeUri: dist/
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+      # Function URL gives us a public HTTPS endpoint with no API Gateway.
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins: ['*']
+          AllowMethods: ['POST', 'OPTIONS']
+          AllowHeaders: ['content-type']
+      Policies:
+        # Least-privilege: only Converse on the Nova model family.
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource:
+                - !Sub 'arn:aws:bedrock:*::foundation-model/amazon.nova-*'
+                - !Sub 'arn:aws:bedrock:*:*:inference-profile/*nova*'
+
+Outputs:
+  AskEndpoint:
+    Description: Call setAskEndpoint(this_url) in the app's bedrockClient.
+    Value: !GetAtt AskFunctionUrl.FunctionUrl

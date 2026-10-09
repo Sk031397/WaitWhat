@@ -1,0 +1,12 @@
+{
+    "extends": "@tsconfig/react-native/tsconfig.json",
+    "compilerOptions": {
+        "types": ["jest", "@amazon-devices/react-native-kepler"],
+        "baseUrl": ".",
+        "paths": {
+            "@sidekick/*": ["src/*"]
+        }
+    },
+    "include": ["src", "index.js"],
+    "exclude": ["node_modules", "backend", "dist", "build"]
+}
