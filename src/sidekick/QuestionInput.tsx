@@ -57,6 +57,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
           onBlur={() => setFocused(false)}
           onSubmitEditing={submit}
           returnKeyType="search"
+          accessibilityLabel="Ask SideKick a question. Focus this field, then hold the Alexa button to speak, or type your question."
           placeholder="Ask SideKick…  (focus, then hold Alexa to speak)"
           placeholderTextColor={theme.colors.textMuted}
         />
@@ -66,6 +67,8 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
         onPress={submit}
         onFocus={() => setAskFocused(true)}
         onBlur={() => setAskFocused(false)}
+        accessibilityRole="button"
+        accessibilityLabel="Ask SideKick"
         style={[styles.askBtn, { backgroundColor: accent }, askFocused && styles.askBtnFocused]}
       >
         <Text style={styles.askBtnText}>Ask</Text>

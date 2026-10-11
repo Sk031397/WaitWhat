@@ -26,29 +26,37 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
 }) => {
   const [focused, setFocused] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
+  const glow = useRef(new Animated.Value(0)).current;
   const isSports = item.contentType === 'sports';
+  const accent = isSports ? theme.colors.sports : theme.colors.primary;
 
-  const animateTo = (to: number) =>
-    Animated.spring(scale, {
-      toValue: to,
-      useNativeDriver: true,
-      speed: 20,
-      bounciness: 8,
-    }).start();
+  const animateFocus = (on: boolean) => {
+    Animated.parallel([
+      Animated.spring(scale, { toValue: on ? 1.1 : 1, useNativeDriver: true, speed: 20, bounciness: 8 }),
+      Animated.timing(glow, { toValue: on ? 1 : 0, duration: 180, useNativeDriver: true }),
+    ]).start();
+  };
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View style={[styles.wrap, { transform: [{ scale }] }]}>
+      {/* Animated accent glow ring (opacity-driven; works without shadows) */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.glowRing, { borderColor: accent, opacity: glow }]}
+      />
       <Pressable
         hasTVPreferredFocus={hasTVPreferredFocus}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.title}${item.genres ? `, ${item.genres.join(', ')}` : ''}${item.rating ? `, rated ${item.rating}` : ''}. Press to play.`}
         onPress={onPress}
         onFocus={() => {
           setFocused(true);
-          animateTo(1.1);
+          animateFocus(true);
           onFocus?.();
         }}
         onBlur={() => {
           setFocused(false);
-          animateTo(1);
+          animateFocus(false);
         }}
         style={[styles.card, focused && styles.cardFocused]}
       >
@@ -77,10 +85,21 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
 };
 
 const styles = StyleSheet.create({
+  wrap: {
+    marginEnd: theme.card.gap,
+  },
+  glowRing: {
+    position: 'absolute',
+    top: -theme.spacing.xs,
+    left: -theme.spacing.xs,
+    right: -theme.spacing.xs,
+    bottom: -theme.spacing.xs,
+    borderRadius: theme.card.radius + theme.spacing.xs,
+    borderWidth: 3,
+  },
   card: {
     width: theme.card.width,
     height: theme.card.height,
-    marginEnd: theme.card.gap,
     borderRadius: theme.card.radius,
     borderWidth: 5,
     borderColor: 'transparent',

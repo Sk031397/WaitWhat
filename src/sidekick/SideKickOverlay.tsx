@@ -18,6 +18,8 @@ import { buildAskRequest, suggestedPrompts } from './ModeRouter';
 import { ask } from './bedrockClient';
 import { formatTime } from '@sidekick/util/formatTime';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
+import { InterestTracker, LearnedInterest } from './InterestTracker';
+import { playerStatCard } from '@sidekick/data/seededSports';
 
 /**
  * SideKickOverlay — a SLIDE-OUT companion panel.
@@ -38,6 +40,10 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
+
+  // Adaptive learning: remembers what the user keeps asking about.
+  const tracker = useRef(new InterestTracker());
+  const [learned, setLearned] = useState<LearnedInterest | null>(null);
 
   // Panel slides along X. Starts fully off-screen (= panel width).
   const translateX = useRef(new Animated.Value(theme.overlayWidth)).current;
@@ -62,6 +68,41 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
     }
   }, [open, translateX]);
 
+  // ----- Signature mode-switch animation -----
+  // modeAnim: 0 = general, 1 = sports. Drives an interpolated accent color and
+  // a badge "morph" pulse so context-awareness is something you SEE happen.
+  const modeAnim = useRef(new Animated.Value(mode === 'sports' ? 1 : 0)).current;
+  const badgePulse = useRef(new Animated.Value(1)).current;
+  const prevMode = useRef(mode);
+  useEffect(() => {
+    if (prevMode.current === mode) return;
+    prevMode.current = mode;
+    // Accent sweeps to the new mode's color; badge pops then settles.
+    Animated.parallel([
+      Animated.timing(modeAnim, {
+        toValue: mode === 'sports' ? 1 : 0,
+        duration: 420,
+        useNativeDriver: false, // color interpolation needs JS driver
+      }),
+      Animated.sequence([
+        Animated.timing(badgePulse, { toValue: 1.18, duration: 180, useNativeDriver: true }),
+        Animated.spring(badgePulse, { toValue: 1, speed: 14, bounciness: 10, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, [mode, modeAnim, badgePulse]);
+
+  const animatedAccent = modeAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.colors.primary, theme.colors.sports],
+  });
+
+  // ----- Answer entrance animation (fade + slide-up) -----
+  const answerAnim = useRef(new Animated.Value(0)).current;
+  const playAnswerIn = useCallback(() => {
+    answerAnim.setValue(0);
+    Animated.timing(answerAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+  }, [answerAnim]);
+
   // Announce answers to VoiceView (the only speech-output path on Vega — there
   // is no app-level TTS). If the user has VoiceView on, it reads this aloud.
   const announce = useCallback((a: SideKickAnswer) => {
@@ -77,8 +118,9 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       setAnswer(proactive);
       setOpen(true);
       announce(proactive);
+      playAnswerIn();
     }
-  }, [proactive, announce]);
+  }, [proactive, announce, playAnswerIn]);
 
   const accent = mode === 'sports' ? theme.colors.sports : theme.colors.primary;
 
@@ -118,8 +160,18 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       };
       setAnswer(finalAnswer);
       announce(finalAnswer);
+      playAnswerIn();
+
+      // Adaptive learning: did this question reveal a repeated interest?
+      const justLearned = tracker.current.record(question);
+      if (justLearned) {
+        setLearned(justLearned);
+        AccessibilityInfo.announceForAccessibility?.(
+          `SideKick pinned ${justLearned.entity}, since you keep asking about them.`,
+        );
+      }
     },
-    [snapshot, addAskMarker, announce],
+    [snapshot, addAskMarker, announce, playAnswerIn],
   );
 
   return (
@@ -128,6 +180,8 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       {!open ? (
         <Pressable
           hasTVPreferredFocus
+          accessibilityRole="button"
+          accessibilityLabel="Open SideKick. Ask about what you're watching without pausing."
           onPress={() => setOpen(true)}
           onFocus={() => setTabFocused(true)}
           onBlur={() => setTabFocused(false)}
@@ -152,15 +206,43 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
           style={styles.panelFade}
         />
         <View style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: accent }]}>
+          <Animated.View
+            style={[
+              styles.badge,
+              { backgroundColor: animatedAccent, transform: [{ scale: badgePulse }] },
+            ]}
+          >
             <Text style={styles.badgeText}>
               {mode === 'sports' ? 'SPORTS MODE' : 'SIDEKICK'}
             </Text>
-          </View>
-          <Pressable onPress={() => setOpen(false)} style={styles.close}>
+          </Animated.View>
+          <Pressable
+            onPress={() => setOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close SideKick"
+            style={styles.close}
+          >
             <Text style={styles.closeText}>Close ✕</Text>
           </Pressable>
         </View>
+
+        {/* Adaptive learning: a learned interest SideKick pinned on its own */}
+        {learned ? (
+          <View style={[styles.pinned, { borderColor: accent }]}>
+            <Text style={[styles.pinnedTitle, { color: accent }]}>
+              📌 Pinned · {learned.entity}
+            </Text>
+            <Text style={styles.pinnedSub}>
+              You keep asking about {learned.entity} — SideKick will keep this handy.
+            </Text>
+            {learned.gameId ? (
+              (() => {
+                const sc = playerStatCard(learned.gameId, learned.entity);
+                return sc ? <StatCard data={sc} /> : null;
+              })()
+            ) : null}
+          </View>
+        ) : null}
 
         <View
           style={styles.answerArea}
@@ -168,7 +250,19 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
           accessibilityLiveRegion="polite"
         >
           {answer ? (
-            <>
+            <Animated.View
+              style={{
+                opacity: answerAnim,
+                transform: [
+                  {
+                    translateY: answerAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [theme.spacing.md, 0],
+                    }),
+                  },
+                ],
+              }}
+            >
               {answer.proactive ? (
                 <View style={[styles.proactivePill, { borderColor: accent }]}>
                   <Text style={[styles.proactivePillText, { color: accent }]}>
@@ -200,7 +294,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                   ) : null}
                 </>
               )}
-            </>
+            </Animated.View>
           ) : (
             <View style={styles.hints}>
               <Text style={styles.hintTitle}>Try asking:</Text>
@@ -213,8 +307,18 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
           )}
         </View>
 
+        {/* Accessibility affordance — makes the spoken-answers feature visible */}
+        <View style={styles.a11yRow}>
+          <Text style={styles.a11yText}>🔊 Answers are read aloud with VoiceView</Text>
+        </View>
+
         {/* Real voice/text entry (system keyboard mic = Vega STT) */}
         <QuestionInput mode={mode} onSubmit={handleSubmit} />
+
+        {/* Embeddability note — SideKick is a layer any streaming app can add */}
+        <Text style={styles.embedNote}>
+          A companion layer any streaming app can embed.
+        </Text>
       </Animated.View>
     </View>
   );
@@ -290,6 +394,39 @@ const styles = StyleSheet.create({
   closeText: { color: theme.colors.textSecondary, fontSize: theme.font.caption },
 
   answerArea: { flex: 1, marginVertical: theme.spacing.md },
+  a11yRow: {
+    marginBottom: theme.spacing.sm,
+  },
+  a11yText: {
+    color: theme.colors.textMuted,
+    fontSize: theme.font.caption,
+    letterSpacing: theme.tracking.wide,
+  },
+  embedNote: {
+    color: theme.colors.textMuted,
+    fontSize: theme.font.caption,
+    textAlign: 'center',
+    marginTop: theme.spacing.sm,
+    fontStyle: 'italic',
+  },
+  pinned: {
+    borderWidth: 2,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.surfaceRaised,
+  },
+  pinnedTitle: {
+    fontSize: theme.font.body,
+    fontWeight: theme.weight.black,
+    letterSpacing: theme.tracking.wide,
+    marginBottom: theme.spacing.xs / 2,
+  },
+  pinnedSub: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.font.caption,
+    marginBottom: theme.spacing.sm,
+  },
   question: {
     color: theme.colors.textSecondary,
     fontSize: theme.font.body,

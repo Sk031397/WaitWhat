@@ -11,6 +11,7 @@ import { CATALOG, CATALOG_ROWS, itemsForRow, getCatalogItem } from '@sidekick/da
 import { CatalogItem } from '@sidekick/data/types';
 import { FocusableCard } from '@sidekick/components/FocusableCard';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
+import { Vignette } from '@sidekick/components/Vignette';
 import { theme } from '@sidekick/theme';
 
 /**
@@ -128,6 +129,9 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
           );
         })}
       </ScrollView>
+
+      {/* Cinematic edge vignette (non-interactive, top layer) */}
+      <Vignette />
     </View>
   );
 };

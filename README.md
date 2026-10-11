@@ -177,10 +177,30 @@ connected. The two fallbacks are intentionally mirrored.
 
 | Criterion | Where it shows up |
 |---|---|
-| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, Bedrock Converse with `maxTokens` + adaptive retry + least-privilege IAM, untrusted-input validation |
-| **Design** | One hold-to-talk gesture, non-blocking overlay, mode badge makes context-awareness visible, 10-foot scaling, accessible focus rings (border + scale, not color alone) |
-| **Potential Impact** | Two near-universal viewing behaviors (actor/plot lookups, mid-game stats) solved without leaving the screen |
-| **Quality of the Idea** | "The companion that understands what you're watching" — a single adaptive pipeline, not two bolted-together features |
+| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, untrusted-input validation, graceful seeded fallback |
+| **Design** | One hold-to-ask gesture, non-blocking overlay, **animated mode switch** (accent sweeps + badge morphs when context changes), animated focus bloom, cinematic vignette, timeline-anchored answers, 10-foot scaling, accessible focus (border + scale, not color alone) |
+| **Potential Impact** | Two near-universal behaviors (actor/plot lookups, mid-game catch-up) solved without leaving the screen — **plus an accessibility layer** (spoken answers via VoiceView) and a **content-agnostic pipeline any streaming app could embed** |
+| **Quality of the Idea** | "The companion that understands what you're watching **and where you are in it**" — one adaptive pipeline with proactive, timeline-aware moments, not two bolted-together features |
+
+---
+
+## Who this is for (potential impact)
+
+SideKick solves behaviors that are near-universal, and it reaches audiences a
+plain companion app would miss:
+
+- **Everyone who reaches for their phone mid-show** — "who is that actor?",
+  "what happened last episode?" — answered on the TV without pausing.
+- **Sports viewers who join late or lose track** — "catch me up", "what are his
+  stats?" — with live-style stat cards and proactive big-play surfacing.
+- **Low-vision viewers (accessibility).** SideKick's answers are announced
+  through **VoiceView**, so a viewer who can't read the panel still hears what's
+  on screen and what's happening in the game. On VegaOS, VoiceView is the
+  supported speech-output path; SideKick is built to use it.
+- **Any streaming app, not just this one.** The pipeline is content-agnostic —
+  it takes "what's playing + where you are + a question" and returns a grounded
+  answer. It's designed to drop into an existing catalog app as a companion
+  layer, which is the path beyond this hackathon.
 
 ---
 
@@ -188,14 +208,19 @@ connected. The two fallbacks are intentionally mirrored.
 
 **Services used**
 
-- **Amazon Bedrock (Nova Lite) via the Converse API** (`@aws-sdk/client-bedrock-runtime`).
+- **Amazon Bedrock (Nova Micro) via the Converse API** (`@aws-sdk/client-bedrock-runtime`).
   `backend/handler.ts` builds a mode-specific system prompt that grounds the model
   on the current title/synopsis (general mode) or the live game snapshot (sports
   mode), then calls `ConverseCommand` with `maxTokens: 256` and `temperature: 0.3`.
-- **AWS Lambda + Function URL** (`backend/template.yaml`, SAM) — public HTTPS
-  endpoint with CORS, no API Gateway needed.
-- **IAM** — least-privilege policy scoped to `bedrock:InvokeModel*` on the
-  `amazon.nova-*` model family and `*nova*` inference profiles only.
+  Deployed and live — the app receives real model-generated answers
+  (`fromFallback: false`), with the seeded fallback reserved for offline/outage.
+- **Amazon API Gateway (HTTP API) + AWS Lambda** — public HTTPS `/ask` endpoint
+  with CORS; the Lambda holds the Bedrock integration. (A Function URL was tried
+  first; this account blocks public Function URLs, so an HTTP API fronts the
+  Lambda instead — documented in the build history.)
+- **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on foundation
+  models + inference profiles, plus the AWS Marketplace subscription actions
+  required for model access.
 
 **Practices applied from AWS guidance**
 
@@ -207,6 +232,8 @@ connected. The two fallbacks are intentionally mirrored.
   before entering the prompt.
 - No AWS credentials ever ship in the TV app — Bedrock is only ever called
   server-side.
+- Graceful degradation: a deterministic seeded fallback (mirrored client + server)
+  keeps the app answering if the model or network is unavailable.
 
 ---
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { VideoProvider, useVideoContext } from '@sidekick/player/useVideoContext';
 import { VideoPlayer } from '@sidekick/player/VideoPlayer';
 import { SideKickOverlay } from '@sidekick/sidekick/SideKickOverlay';
@@ -37,6 +37,19 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
   useEffect(() => {
     if (item) setCurrent(item);
   }, [item, setCurrent]);
+
+  // Mode-enter sweep: a brief themed banner announces the mode when the player
+  // opens, so the general->sports re-theme is a visible, designed moment.
+  const modeToast = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!item) return;
+    modeToast.setValue(0);
+    Animated.sequence([
+      Animated.timing(modeToast, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.delay(1600),
+      Animated.timing(modeToast, { toValue: 0, duration: 350, useNativeDriver: true }),
+    ]).start();
+  }, [item, modeToast]);
 
   // Show controls and (re)arm the 5s auto-hide. Called on any interaction.
   const pokeControls = useCallback(() => {
@@ -120,6 +133,31 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
         </Text>
       </View>
 
+      {/* Mode-enter sweep banner (themed to the active mode) */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.modeToast,
+          {
+            borderColor: mode === 'sports' ? theme.colors.sports : theme.colors.primary,
+            opacity: modeToast,
+            transform: [
+              { translateY: modeToast.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) },
+            ],
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.modeToastDot,
+            { backgroundColor: mode === 'sports' ? theme.colors.sports : theme.colors.primary },
+          ]}
+        />
+        <Text style={styles.modeToastText}>
+          {mode === 'sports' ? 'SPORTS MODE · stats unlocked' : 'COMPANION MODE'}
+        </Text>
+      </Animated.View>
+
       {/* Bottom transport controls (Select = play/pause) */}
       <PlayerControls
         visible={controlsVisible}
@@ -183,5 +221,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowRadius: 8,
+  },
+  modeToast: {
+    position: 'absolute',
+    top: theme.safeZones.vertical,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderRadius: theme.radius.pill,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  modeToastDot: {
+    width: theme.spacing.sm,
+    height: theme.spacing.sm,
+    borderRadius: theme.spacing.sm / 2,
+    marginEnd: theme.spacing.sm,
+  },
+  modeToastText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.font.body,
+    fontWeight: '800',
+    letterSpacing: 1.5,
   },
 });

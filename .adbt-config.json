@@ -1,0 +1,11 @@
+{
+  "project": {
+    "identifier": "com.sidekick.viewingcompanion"
+  },
+  "platform": {
+    "default": "vega_os",
+    "paths": {
+      "vega_os": "."
+    }
+  }
+}

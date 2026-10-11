@@ -10,9 +10,8 @@
  * `setAskEndpoint(url)` from bedrockClient (e.g. from a dev/debug menu).
  */
 
-// Replace with your Lambda Function URL / API Gateway URL after deploy, e.g.
-//   https://abc123.lambda-url.us-east-1.on.aws/
-export const ASK_ENDPOINT = 'REPLACE_WITH_DEPLOYED_ASK_URL';
+// Deployed SideKick backend (API Gateway → Lambda → Amazon Bedrock Nova Micro).
+export const ASK_ENDPOINT = 'https://u7ycv4t5kc.execute-api.us-east-1.amazonaws.com/ask';
 
 /** True when no real endpoint has been configured yet. */
 export const isPlaceholderEndpoint = (url: string): boolean =>

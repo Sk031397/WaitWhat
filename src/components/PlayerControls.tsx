@@ -92,6 +92,8 @@ const ControlButton: React.FC<{
   return (
     <Pressable
       hasTVPreferredFocus={hasTVPreferredFocus}
+      accessibilityRole="button"
+      accessibilityLabel={label.replace(/[«»►❚]/g, '').trim()}
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
