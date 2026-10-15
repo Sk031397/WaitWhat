@@ -13,15 +13,12 @@ import { SideKickAnswer } from '@sidekick/data/types';
 import { theme } from '@sidekick/theme';
 import { useVideoContext } from '@sidekick/player/useVideoContext';
 import { QuestionInput } from './QuestionInput';
-import { StatCard } from './StatCard';
 import { buildAskRequest, suggestedPrompts } from './ModeRouter';
-import { ask } from './bedrockClient';
+import { ask, vision } from './bedrockClient';
 import { formatTime } from '@sidekick/util/formatTime';
 import { parseSeekIntent, parseFractionalPhrase } from '@sidekick/util/parseTimePhrase';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
 import { useTypewriter } from '@sidekick/util/useTypewriter';
-import { InterestTracker, LearnedInterest } from './InterestTracker';
-import { playerStatCard } from '@sidekick/data/seededSports';
 
 /**
  * SideKickOverlay — a SLIDE-OUT companion panel.
@@ -43,10 +40,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
-
-  // Adaptive learning: remembers what the user keeps asking about.
-  const tracker = useRef(new InterestTracker());
-  const [learned, setLearned] = useState<LearnedInterest | null>(null);
 
   // Panel slides along X. Starts fully off-screen (= panel width).
   const translateX = useRef(new Animated.Value(theme.overlayWidth)).current;
@@ -242,7 +235,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         mode: snap.mode,
         question,
         text: res.text,
-        statCard: res.statCard,
         fromFallback: res.fromFallback,
         askedAtSeconds,
         askedAtLabel,
@@ -254,18 +246,49 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       playAnswerIn();
       // Drop a navigable marker carrying this answer at the (possibly jumped) time.
       addAskMarker(askedAtSeconds, snap.mode, finalAnswer);
-
-      // Adaptive learning: did this question reveal a repeated interest?
-      const justLearned = tracker.current.record(question);
-      if (justLearned) {
-        setLearned(justLearned);
-        AccessibilityInfo.announceForAccessibility?.(
-          `SideKick pinned ${justLearned.entity}, since you keep asking about them.`,
-        );
-      }
     },
     [snapshot, addAskMarker, announce, playAnswerIn, requestSeek, durationSeconds],
   );
+
+  // "What's in this scene?" — run Amazon Rekognition on the current item's
+  // poster/scene image (by S3 key derived from its image URL).
+  const handleVision = useCallback(async () => {
+    const snap = snapshot();
+    if (!snap.item) return;
+    const imageUrl = snap.item.headerImage || snap.item.thumbnail || '';
+    // Only our S3 media bucket images have Rekognition labels; derive the key.
+    const key = imageUrl.includes('sidekickvegaos')
+      ? imageUrl.split('/').pop()?.split('?')[0] ?? ''
+      : '';
+    const pendingId = `${Date.now()}`;
+    setAnswer({ id: pendingId, mode: snap.mode, question: "What's in this scene?", text: '', pending: true });
+    setOpen(true);
+    if (!key) {
+      const a: SideKickAnswer = {
+        id: pendingId, mode: snap.mode, question: "What's in this scene?",
+        text: 'Scene analysis is available on the sports titles.', insight: true, proactive: true,
+      };
+      setAnswer(a); playAnswerIn(); return;
+    }
+    const res = await vision(key, {
+      title: snap.item.title,
+      // The known sport/genre from the catalog — anchors the description so
+      // Rekognition's generic mislabels (e.g. basketball→baseball) can't drive it.
+      sport: snap.item.genres?.[0],
+    });
+    const a: SideKickAnswer = {
+      id: pendingId,
+      mode: snap.mode,
+      question: "What's in this scene?",
+      text: res.text,
+      fromFallback: res.fromFallback,
+      insight: true,
+      proactive: true,
+    };
+    setAnswer(a);
+    announce(a);
+    playAnswerIn();
+  }, [snapshot, announce, playAnswerIn]);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -318,24 +341,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
             <Text style={styles.closeText}>Close ✕</Text>
           </Pressable>
         </View>
-
-        {/* Adaptive learning: a learned interest SideKick pinned on its own */}
-        {learned ? (
-          <View style={[styles.pinned, { borderColor: accent }]}>
-            <Text style={[styles.pinnedTitle, { color: accent }]}>
-              📌 Pinned · {learned.entity}
-            </Text>
-            <Text style={styles.pinnedSub}>
-              You keep asking about {learned.entity} — SideKick will keep this handy.
-            </Text>
-            {learned.gameId ? (
-              (() => {
-                const sc = playerStatCard(learned.gameId, learned.entity);
-                return sc ? <StatCard data={sc} /> : null;
-              })()
-            ) : null}
-          </View>
-        ) : null}
 
         <View
           style={styles.answerArea}
@@ -391,7 +396,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                     {revealedText}
                     {!revealDone ? <Text style={{ color: accent }}>▋</Text> : null}
                   </Text>
-                  {revealDone && answer.statCard ? <StatCard data={answer.statCard} /> : null}
                   {revealDone && answer.fromFallback ? (
                     <Text style={styles.fallbackNote}>offline answer</Text>
                   ) : null}
@@ -414,6 +418,20 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         <View style={styles.a11yRow}>
           <Text style={styles.a11yText}>🔊 Answers are read aloud with VoiceView</Text>
         </View>
+
+        {/* Computer vision — Amazon Rekognition on the scene image */}
+        <Pressable
+          onPress={handleVision}
+          accessibilityRole="button"
+          accessibilityLabel="What's in this scene? Analyze with computer vision."
+          style={({ pressed }) => [
+            styles.visionBtn,
+            { borderColor: accent },
+            pressed && styles.visionBtnFocused,
+          ]}
+        >
+          <Text style={styles.visionBtnText}>👁  What's in this scene?</Text>
+        </Pressable>
 
         {/* Real voice/text entry (system keyboard mic = Vega STT) */}
         <QuestionInput mode={mode} onSubmit={handleSubmit} />
@@ -505,30 +523,29 @@ const styles = StyleSheet.create({
     fontSize: theme.font.caption,
     letterSpacing: theme.tracking.wide,
   },
+  visionBtn: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: theme.radius.pill,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.surfaceSolid,
+  },
+  visionBtnFocused: { opacity: 0.7 },
+  visionBtnText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.font.body,
+    fontWeight: '600',
+  },
   embedNote: {
     color: theme.colors.textMuted,
     fontSize: theme.font.caption,
     textAlign: 'center',
     marginTop: theme.spacing.sm,
     fontStyle: 'italic',
-  },
-  pinned: {
-    borderWidth: 2,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-    backgroundColor: theme.colors.surfaceRaised,
-  },
-  pinnedTitle: {
-    fontSize: theme.font.body,
-    fontWeight: theme.weight.black,
-    letterSpacing: theme.tracking.wide,
-    marginBottom: theme.spacing.xs / 2,
-  },
-  pinnedSub: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.font.caption,
-    marginBottom: theme.spacing.sm,
   },
   question: {
     color: theme.colors.textSecondary,

@@ -1,5 +1,4 @@
 import { AskRequest, AskResponse } from '@sidekick/data/types';
-import { playerStatCard, scoreboardCard, GAME_SNAPSHOTS } from '@sidekick/data/seededSports';
 import { ASK_ENDPOINT, isPlaceholderEndpoint } from '@sidekick/config';
 
 /**
@@ -18,6 +17,43 @@ export const setAskEndpoint = (url: string): void => {
 };
 
 const REQUEST_TIMEOUT_MS = 6000;
+
+/** Result of a "What's in this scene?" Amazon Rekognition call. */
+export interface VisionResult {
+  text: string;
+  labels: string[];
+  fromFallback?: boolean;
+}
+
+/**
+ * Ask the backend to run Amazon Rekognition DetectLabels on the current item's
+ * poster/scene image (by S3 key). CV runs on the image, not the live video
+ * frame (Vega has no frame-capture API).
+ */
+export const vision = async (
+  imageKey: string,
+  hint?: { title?: string; sport?: string },
+): Promise<VisionResult> => {
+  if (isPlaceholderEndpoint(endpoint) || !imageKey) {
+    return { text: 'Scene analysis needs the deployed backend.', labels: [], fromFallback: true };
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vision: { imageKey, title: hint?.title, sport: hint?.sport } }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = (await res.json()) as VisionResult;
+    return data;
+  } catch {
+    return { text: 'Scene analysis is unavailable right now.', labels: [], fromFallback: true };
+  }
+};
 
 export const ask = async (req: AskRequest): Promise<AskResponse> => {
   // No real endpoint configured yet → go straight to the seeded fallback
@@ -53,44 +89,7 @@ export const ask = async (req: AskRequest): Promise<AskResponse> => {
 export const seededFallback = (req: AskRequest): AskResponse => {
   const q = req.question.toLowerCase();
 
-  if (req.mode === 'sports' && req.content.gameId) {
-    const gameId = req.content.gameId;
-    const game = GAME_SNAPSHOTS[gameId];
-
-    // "catch me up" / recap
-    if (q.includes('catch') || q.includes('miss') || q.includes('recap') || q.includes('happen')) {
-      return {
-        text: game?.recap ?? 'No recap available for this game.',
-        statCard: scoreboardCard(gameId),
-        fromFallback: true,
-      };
-    }
-
-    // player stat lookup — match any seeded player name mentioned
-    if (game) {
-      for (const p of game.players) {
-        const last = p.name.split('. ').pop()?.toLowerCase() ?? '';
-        if (last && q.includes(last)) {
-          return {
-            text: `${p.name} has ${p.points} points, ${p.rebounds} rebounds and ${p.assists} assists on ${p.fieldGoalPct}% shooting.`,
-            statCard: playerStatCard(gameId, p.name),
-            fromFallback: true,
-          };
-        }
-      }
-    }
-
-    // score / general sports question
-    return {
-      text: game
-        ? `${game.awayTeam} ${game.awayScore}, ${game.homeTeam} ${game.homeScore} — ${game.quarter}, ${game.clock} to play.`
-        : 'Score unavailable.',
-      statCard: scoreboardCard(gameId),
-      fromFallback: true,
-    };
-  }
-
-  // General mode fallback — use whatever context the show provided.
+  // General fallback — use whatever context the show provided.
   const ctx = req.content.context ?? {};
   if (q.includes('who') && Array.isArray(ctx.cast)) {
     return {

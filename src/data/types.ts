@@ -11,8 +11,6 @@ export interface CatalogItem {
   videoUrl: string;
   /** Short synopsis used as grounding context for the AI. */
   synopsis: string;
-  /** For sports content: which seeded game dataset to attach. */
-  gameId?: string;
   /** Rich context the AI can reference (cast, teams, etc). */
   context?: Record<string, string | string[]>;
 
@@ -30,8 +28,7 @@ export interface CatalogItem {
 
   /**
    * Scripted proactive "scene insight" moments: at each timestamp SideKick
-   * auto-surfaces a short insight (no question needed) — the general-mode
-   * equivalent of a sports big-play.
+   * auto-surfaces a short insight (no question needed).
    */
   sceneMoments?: SceneMoment[];
 }
@@ -52,8 +49,6 @@ export interface SideKickAnswer {
   question: string;
   /** Plain-language answer text. */
   text: string;
-  /** Optional structured stat card (sports mode). */
-  statCard?: StatCard;
   /** True while awaiting the backend. */
   pending?: boolean;
   /** True if this came from the seeded fallback, not live Bedrock. */
@@ -64,7 +59,7 @@ export interface SideKickAnswer {
   askedAtLabel?: string;
   /** True when SideKick surfaced this proactively (no user question). */
   proactive?: boolean;
-  /** True for a general-mode scene insight (vs. a sports big-play). */
+  /** True for a general-mode scene insight. */
   insight?: boolean;
   /** When the question asked to jump to a time, the resolved target (seconds). */
   jumpedToSeconds?: number;
@@ -81,19 +76,6 @@ export interface AskMarker {
   answer?: SideKickAnswer;
 }
 
-export interface StatCard {
-  heading: string;
-  subheading?: string;
-  rows: StatRow[];
-}
-
-export interface StatRow {
-  label: string;
-  value: string;
-  /** Optional highlight (e.g. a standout stat). */
-  highlight?: boolean;
-}
-
 /** Request sent to the backend /ask endpoint. */
 export interface AskRequest {
   mode: SideKickMode;
@@ -104,7 +86,6 @@ export interface AskRequest {
     synopsis: string;
     /** Current playback position in seconds — scene/play context. */
     positionSeconds: number;
-    gameId?: string;
     context?: Record<string, string | string[]>;
   };
 }
@@ -112,6 +93,5 @@ export interface AskRequest {
 /** Response from the backend /ask endpoint. */
 export interface AskResponse {
   text: string;
-  statCard?: StatCard;
   fromFallback?: boolean;
 }

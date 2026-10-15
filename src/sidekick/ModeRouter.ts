@@ -7,7 +7,7 @@ import { AskRequest, CatalogItem, SideKickMode } from '@sidekick/data/types';
  * assembles the grounding context the AI needs. The SAME pipeline serves both
  * modes; only the context payload differs:
  *   - general mode: show synopsis + cast / previous-episode context
- *   - sports mode:  attaches the gameId so the backend can ground on live stats
+ *   - sports mode:  grounds the model on the game context (teams, venue)
  *
  * This is why combining "ask about anything" and "sports companion" is one
  * coherent product rather than two apps: a single gesture, a single pipeline,
@@ -26,7 +26,6 @@ export const buildAskRequest = (
     contentType: item.contentType,
     synopsis: item.synopsis,
     positionSeconds: Math.round(positionSeconds),
-    gameId: item.gameId,
     context: item.context,
   },
 });
@@ -37,5 +36,5 @@ export const buildAskRequest = (
  */
 export const suggestedPrompts = (mode: SideKickMode): string[] =>
   mode === 'sports'
-    ? ['What are Okafor\'s stats?', 'Catch me up', 'What\'s the score?']
+    ? ['Catch me up', 'What\'s the score?', 'Who\'s winning?']
     : ['Who is in this scene?', 'What happened last episode?', 'What\'s this show about?'];

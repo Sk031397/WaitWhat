@@ -11,18 +11,20 @@ headline moments:
 1. **Talk to your timeline** — ask, then navigate by natural language, then
    revisit any question on the scrubber (Idea — your signature).
 2. **Live Bedrock answer** (real, `fromFallback:false`) — Tech.
-3. **Context-aware sports mode** — open a game and SideKick re-themes, answers
-   with a **StatCard**, and surfaces a **proactive big-play** unprompted (Idea + sports).
-4. **It anticipates on anything** — a proactive scene insight on a show, too (Idea).
-5. **Accessible by design** — answers spoken via VoiceView for low-vision
+3. **Context-aware sports mode** — open a game and SideKick re-themes and
+   answers "catch me up" / "what's the score" grounded on the game (Idea + sports).
+4. **It sees the scene** — "What's in this scene?" runs **Amazon Rekognition** on
+   the title's image, chained into Bedrock for a natural description (Tech + CV).
+5. **It anticipates on anything** — a proactive scene insight on a show, too (Idea).
+6. **Accessible by design** — answers spoken via VoiceView for low-vision
    viewers; non-blocking, platform-correct (Design/Impact).
 
 > NOTE: SideKick has two modes from one gesture. **Companion mode** (shows/movies)
 > answers anything + proactive scene insights. **Sports mode** (a "Live Sports"
-> row of games) adds StatCards + proactive big-plays. All teams/players are
-> **made-up** (no real leagues/trademarks) over **real, license-clear sports
-> footage** the team hosts on S3. The seeded stats/big-play are on the basketball
-> game (`game01`); other games answer via live Bedrock without a seeded StatCard.
+> row of games) re-themes and grounds its live Bedrock answers on the game
+> context (teams, venue, situation). All teams/players are **made-up** (no real
+> leagues/trademarks) over **real, license-clear sports footage** the team hosts
+> on S3.
 
 ---
 
@@ -37,8 +39,8 @@ headline moments:
 - [ ] Virtual device started **with GUI**: `vega virtual-device start --gui`
       (the VD stops on idle — restart if needed).
 - [ ] Screen-record the VD window at 1080p. Know the remote/keyboard mapping.
-- [ ] Rehearse the ask flow: open panel → the field auto-focuses → type/dictate →
-      Ask. Have your exact phrases ready so takes are clean.
+- [ ] Rehearse the ask flow: open panel → focus the field (keyboard/mic comes
+      up) → type/dictate → Ask. Have your exact phrases ready so takes are clean.
 
 ---
 
@@ -72,12 +74,22 @@ Open the panel again and type/say navigation phrases, letting the playhead jump:
 
 ### Sports mode (context-aware — for the sports judge)
 Back out, open a **Live Sports** game (e.g. Coastal Kings vs. Summit City). The
-UI re-themes (green accent, SPORTS MODE). Ask **"What are Okafor's stats?"** → a
-**StatCard** (points/rebounds/assists, season-high chip). Let it play to ~8s and
-a **⚡ BIG PLAY** card surfaces on its own.
-> "On a game, SideKick knows it's sports — it pulls up a stat card, and it flags
->  the big play **the moment it happens**, before I even ask."
+UI re-themes (green accent, SPORTS MODE). Ask **"Catch me up"** or **"What's the
+score?"** → a live Bedrock answer grounded on the game context (teams, venue,
+situation).
+> "On a game, SideKick knows it's sports — it re-themes and answers in the
+>  moment, grounded on the game, so I can jump in late and catch up."
 (Teams/players are fictional; the footage is our own license-clear sports clips.)
+
+### It sees the scene (computer vision — for the Rekognition/CV judge)
+Still on a sports title, open the panel and tap **"👁 What's in this scene?"** →
+a natural scene description appears (e.g. soccer: *"Azure United faces Verde FC
+in a thrilling soccer match…"*).
+> "This runs **Amazon Rekognition** on the scene image — labels and any on-screen
+>  text — then chains that into **Bedrock** to describe the scene in plain
+>  language. Two AWS AI services working together."
+(Works across all seven sports titles — basketball, football, hockey, soccer,
+tennis, boxing, wrestling. CV runs on the scene image; Vega has no live-frame capture.)
 
 ### It anticipates on a show too (proactive scene insight)
 Open a show and let it reach a scene moment — a **✨ SCENE INSIGHT** card surfaces
@@ -94,9 +106,10 @@ Open the controls; focus the **"Your questions:"** chips. Select an earlier one.
 Voiceover over the UI:
 > "Every answer is a live **Amazon Bedrock** call, grounded on the content and
 >  timestamp, behind **API Gateway + Lambda** with least-privilege IAM — no
->  credentials ever ship in the TV app. Built on Vega's native **W3C media**
->  stack, not react-native-video. Answers are announced through **VoiceView** so
->  low-vision viewers hear what's on screen."
+>  credentials ever ship in the TV app. 'What's in this scene?' adds **Amazon
+>  Rekognition**, chained into Bedrock — two AWS AI services composed. Built on
+>  Vega's native **W3C media** stack, not react-native-video. Answers are
+>  announced through **VoiceView** so low-vision viewers hear what's on screen."
 
 ### 2:40–2:50 — Close
 Home, one clean focus sweep.
@@ -119,9 +132,8 @@ Home, one clean focus sweep.
   written feedback, be honest: Vega has no app-level STT, so SideKick uses the
   platform's system-keyboard mic — the correct, supported path.
 - Don't imply the sports teams/leagues are real — they're invented. If asked,
-  say the footage is your own license-clear clips and the teams/stats are made up.
-  Note only the basketball game has a seeded StatCard/big-play; other games
-  answer via live Bedrock without one.
+  say the footage is your own license-clear clips and the teams are made up.
+  Sports mode re-themes and grounds its live Bedrock answers on the game context.
 - Don't show console logs or simulator chrome; crop them out.
 - Don't exceed 3:00. If tight, trim the under-the-hood voiceover first.
 

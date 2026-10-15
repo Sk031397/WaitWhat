@@ -1,7 +1,7 @@
 # SideKick — talk to your timeline
 
 **Track:** Fire TV (Vega OS) · **Mini challenge:** AWS Builder
-**Priority categories:** AI-enhanced viewing, sports, multi-modal UX, accessibility
+**Priority categories:** AI-enhanced viewing, sports, computer vision, multi-modal UX, accessibility
 
 ---
 
@@ -33,13 +33,18 @@ While a show plays full-screen (playback never stops):
   timestamp; a "Your questions" row lets you **jump back to any moment and
   re-surface its answer** — a navigable Q&A history over the video.
 - **It adapts to sports.** Open a game from the **Live Sports** row and the same
-  gesture enters **sports mode**: SideKick re-themes, answers with a **StatCard**
-  (points/rebounds/assists), and surfaces a **proactive big-play** before you ask.
-  Teams/players are fictional (no real leagues/trademarks) over our own
-  license-clear sports footage.
+  gesture enters **sports mode**: SideKick re-themes and grounds its live Bedrock
+  answers on the game context (teams, venue, situation), so "catch me up" or
+  "what's the score" answer in the moment. Teams/players are fictional (no real
+  leagues/trademarks) over our own license-clear sports footage.
 - **It anticipates on shows too.** At key scene moments SideKick **proactively
   surfaces an insight** ("New scene — the crew finds the cache raided; the
   season's mystery begins") without being asked.
+- **It can look at the scene.** "What's in this scene?" runs **Amazon
+  Rekognition** on the content's image (labels + any on-screen text), then feeds
+  that into Bedrock to describe the scene in a natural sentence — two AWS AI
+  services chained. (CV runs on the poster/scene image; Vega has no live-frame
+  capture.)
 - **It's accessible.** Answers are announced through **VoiceView**, so a
   low-vision viewer hears what's on screen and what's happening — a viewing
   companion that *narrates*, not just displays.
@@ -64,9 +69,13 @@ While a show plays full-screen (playback never stops):
   Gateway (HTTP API) + AWS Lambda** with **least-privilege IAM**. The Lambda
   builds a context-grounded system prompt and returns a short, 10-foot answer.
   Live in the demo — the app receives real model answers (`fromFallback:false`).
-- No AWS credentials ever ship in the TV app; Bedrock is only called
-  server-side. A deterministic seeded fallback (mirrored client + server) keeps
-  the app answering if the model or network is unavailable.
+- **Amazon Rekognition** powers the "What's in this scene?" computer-vision
+  action: the same Lambda runs `DetectLabels` + `DetectText` on the content's
+  image (in S3), then **chains the result into Bedrock Nova** to produce a
+  natural scene description — two AWS AI services working together.
+- No AWS credentials ever ship in the TV app; Bedrock/Rekognition are only
+  called server-side. A deterministic seeded fallback (mirrored client + server)
+  keeps the app answering if the model or network is unavailable.
 
 ## Challenges we ran into
 
@@ -109,4 +118,4 @@ adaptive retry, mirrored fallback).
 ## Built with
 
 Fire TV / Vega OS · React Native · `@amazon-devices/react-native-w3cmedia` ·
-Amazon Bedrock (Nova) · AWS Lambda · Amazon API Gateway · IAM · VoiceView
+Amazon Bedrock (Nova) · Amazon Rekognition · AWS Lambda · Amazon API Gateway · IAM · VoiceView

@@ -43,13 +43,7 @@ const FILM = {
 // verified HTTP 206). License-clear footage the team captured/owns.
 const S3 = 'https://sidekickvegaos.s3.us-east-1.amazonaws.com';
 const sportVid = (name: string) => `${S3}/${name}.mp4`;
-const sportPng = (name: string) => `${S3}/${name}.png`;
-
-// Poster fallback (vega-sports-app CDN, MIT-0, verified HTTP 200) for clips that
-// don't have their own .png in the bucket.
-const SPORTS_IMG = 'https://d1v0fxmwkpxbrg.cloudfront.net/sports-app/images';
-const sportImg = (n: number) => `${SPORTS_IMG}/${n}.jpeg`;
-const sportThumb = (n: number) => `${SPORTS_IMG}/250x250/${n}.jpg`;
+const sportImg = (name: string) => `${S3}/${name}.jpg`;
 
 /** ⟶ EDIT THIS MAP to use your own content. Keys are catalog item ids. */
 export const MEDIA: Record<string, Media> = {
@@ -62,13 +56,13 @@ export const MEDIA: Record<string, Media> = {
   movie05: { video: FILM.glass, thumbnail: img('halflife', 420, 260), hero: img('halflife-hero', 1920, 1080) },
   // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
   // basketball matches the seeded game data (Q4, points/rebounds).
-  game01:  { video: sportVid('basketball'),         thumbnail: sportPng('basketball'),         hero: sportPng('basketball') },
-  game02:  { video: sportVid('american_football'),  thumbnail: sportPng('american_football'),  hero: sportPng('american_football') },
-  game03:  { video: sportVid('hockey'),             thumbnail: sportPng('hockey'),             hero: sportPng('hockey') },
-  game04:  { video: sportVid('soccer'),             thumbnail: sportThumb(12), hero: sportImg(12) },
-  game05:  { video: sportVid('tennis'),             thumbnail: sportThumb(14), hero: sportImg(14) },
-  game06:  { video: sportVid('boxing'),             thumbnail: sportThumb(17), hero: sportImg(17) },
-  game07:  { video: sportVid('golf'),               thumbnail: sportThumb(19), hero: sportImg(19) },
+  game01:  { video: sportVid('basketball'),         thumbnail: sportImg('basketball'),         hero: sportImg('basketball') },
+  game02:  { video: sportVid('american_football'),  thumbnail: sportImg('american_football'),  hero: sportImg('american_football') },
+  game03:  { video: sportVid('hockey'),             thumbnail: sportImg('hockey'),             hero: sportImg('hockey') },
+  game04:  { video: sportVid('soccer'),             thumbnail: sportImg('soccer'),             hero: sportImg('soccer') },
+  game05:  { video: sportVid('tennis'),             thumbnail: sportImg('tennis'),             hero: sportImg('tennis') },
+  game06:  { video: sportVid('boxing'),             thumbnail: sportImg('boxing'),             hero: sportImg('boxing') },
+  game07:  { video: sportVid('wrestling'),          thumbnail: sportImg('wrestling'),          hero: sportImg('wrestling') },
 };
 
 const m = (id: string): Media =>
@@ -85,7 +79,6 @@ export const CATALOG: CatalogItem[] = [
     title: 'Coastal Kings vs. Summit City — Q4',
     row: 'Live Sports',
     contentType: 'sports',
-    gameId: 'game01',
     videoUrl: m('game01').video,
     thumbnail: m('game01').thumbnail,
     headerImage: m('game01').hero,
@@ -178,18 +171,18 @@ export const CATALOG: CatalogItem[] = [
   },
   {
     id: 'game07',
-    title: 'Riverside Open — Final Round',
+    title: 'Kessler vs. Boone — Title Match',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game07').video,
     thumbnail: m('game07').thumbnail,
     headerImage: m('game07').hero,
     synopsis:
-      'Final round of the Riverside Open. Hale leads by one stroke heading into the back nine.',
-    genres: ['Golf', 'Live'],
+      'The main-event wrestling title match. Kessler and Boone are trading momentum in the third period with the crowd on its feet.',
+    genres: ['Wrestling', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { leader: 'J. Hale', chasing: 'P. Novak' },
+    context: { wrestlerOne: 'T. Kessler', wrestlerTwo: 'D. Boone' },
   },
 
   // ----- Row: Featured -----

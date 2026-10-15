@@ -5,7 +5,6 @@ import { VideoPlayer } from '@sidekick/player/VideoPlayer';
 import { SideKickOverlay } from '@sidekick/sidekick/SideKickOverlay';
 import { PlayerControls } from '@sidekick/components/PlayerControls';
 import { getCatalogItem, sceneMomentCrossed } from '@sidekick/data/catalog';
-import { bigPlayCrossed, playerStatCard } from '@sidekick/data/seededSports';
 import { SideKickAnswer } from '@sidekick/data/types';
 import { formatTime } from '@sidekick/util/formatTime';
 import { theme } from '@sidekick/theme';
@@ -33,7 +32,6 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
   // Proactive big-play card (sports mode). Fired once when a seeded timestamp
   // is crossed; passed to the overlay which surfaces it without a question.
   const [proactive, setProactive] = useState<SideKickAnswer | null>(null);
-  const firedBigPlays = useRef<Set<number>>(new Set());
   const firedMoments = useRef<Set<number>>(new Set());
 
   useEffect(() => {
@@ -136,26 +134,6 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
           if (d && d !== duration) setDuration(d);
           setProgress(t, d);
 
-          // Proactive big-play detection (sports mode only).
-          if (mode === 'sports' && current?.gameId) {
-            const bp = bigPlayCrossed(currentTime, t);
-            if (bp && bp.gameId === current.gameId && !firedBigPlays.current.has(bp.atSeconds)) {
-              firedBigPlays.current.add(bp.atSeconds);
-              // eslint-disable-next-line no-console
-              console.info(`[SideKick] PROACTIVE big-play fired at ${t.toFixed(1)}s: ${bp.text}`);
-              setProactive({
-                id: `bigplay-${bp.atSeconds}`,
-                mode: 'sports',
-                question: '',
-                text: bp.text,
-                statCard: playerStatCard(bp.gameId, bp.player),
-                askedAtSeconds: t,
-                askedAtLabel: formatTime(t),
-                proactive: true,
-              });
-            }
-          }
-
           // Proactive scene-insight detection (general content, any mode).
           if (current) {
             const sm = sceneMomentCrossed(current, currentTime, t);
@@ -219,7 +197,7 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
           ]}
         />
         <Text style={styles.modeToastText}>
-          {mode === 'sports' ? 'SPORTS MODE · stats unlocked' : 'COMPANION MODE'}
+          {mode === 'sports' ? 'SPORTS MODE' : 'COMPANION MODE'}
         </Text>
       </Animated.View>
 

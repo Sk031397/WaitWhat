@@ -83,8 +83,10 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Actual:** None — the surface is a native hardware sink. Rules out
   "analyze what's literally on screen now."
 - **Severity:** Medium (feature-limiting).
-- **Workaround:** Scoped CV to poster/scene images (multimodal model on an image
-  URL) rather than live frames.
+- **Workaround:** Scoped CV to the content's poster/scene image — the "What's
+  in this scene?" action runs **Amazon Rekognition** (`DetectLabels` +
+  `DetectText`) on the S3 image and chains the result into Bedrock Nova for a
+  natural description — rather than analyzing live frames.
 - **Suggestion:** A frame-grab API would enable on-device CV viewing features.
 
 ### 7. Useful packages missing from the OS 1.2 profile
@@ -184,6 +186,14 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Amazon Nova via Bedrock Converse** was the smoothest part of the whole
   build: first-party access with no Marketplace step, instant, and the Converse
   API is clean. The `maxTokens`/adaptive-retry guidance mattered.
+- **Amazon Rekognition** was the same happy story: `DetectLabels` + `DetectText`
+  worked **first-party and instantly** — no AWS Marketplace subscription gate
+  (the exact thing that blocked Claude), just an IAM action and go. Chaining its
+  output into Bedrock Nova (vision → natural description) was straightforward and
+  is the most satisfying two-service composition in the build. One caveat we
+  worked around: generic `DetectLabels` sometimes mislabels stylized sports
+  stills (basketball → "baseball"), so we anchor the description on the known
+  title/sport from our catalog and treat the vision labels as supporting detail.
 - **The RN 0.72 template** scaffolds a correct, buildable project immediately.
 
 ## Would we build on Vega again?

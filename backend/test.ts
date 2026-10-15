@@ -3,11 +3,15 @@ import type { AskRequest } from './types';
 
 /**
  * Lightweight test harness (no framework needed). Forces the Bedrock path to
- * fail by using a bogus model id + region so we deterministically exercise the
- * seeded fallback, then asserts the shape of each answer. Run: npm test
+ * fail deterministically (bogus model id + an unroutable endpoint, so the SDK
+ * errors immediately instead of making real retried calls), so we exercise the
+ * seeded fallback and assert the shape of each answer. Run: npm test
  */
 process.env.BEDROCK_MODEL_ID = 'nonexistent.model';
 process.env.AWS_REGION = 'us-east-1';
+process.env.AWS_ENDPOINT_URL = 'http://127.0.0.1:1';
+process.env.AWS_ACCESS_KEY_ID = 'test';
+process.env.AWS_SECRET_ACCESS_KEY = 'test';
 
 let passed = 0;
 let failed = 0;
@@ -26,18 +30,6 @@ const call = async (req: AskRequest) => {
   const res = await handler({ body: JSON.stringify(req) });
   return { status: res.statusCode, data: JSON.parse(res.body) };
 };
-
-const sportsReq = (question: string): AskRequest => ({
-  mode: 'sports',
-  question,
-  content: {
-    title: 'Coastal Kings vs. Summit City — Q4',
-    contentType: 'sports',
-    synopsis: 'Fourth quarter, close game.',
-    positionSeconds: 120,
-    gameId: 'game01',
-  },
-});
 
 const generalReq = (question: string): AskRequest => ({
   mode: 'general',
@@ -62,35 +54,29 @@ const run = async () => {
   const missing = await handler({ body: JSON.stringify({ mode: 'general' }) });
   assert(missing.statusCode === 400, 'missing content returns 400');
 
-  // 3. Player stat lookup -> stat card with PTS
-  const okafor = await call(sportsReq("What are Okafor's stats?"));
-  assert(okafor.status === 200, 'player question returns 200');
-  assert(okafor.data.fromFallback === true, 'player question used fallback');
-  assert(!!okafor.data.statCard, 'player question has a stat card');
-  assert(
-    okafor.data.statCard?.heading?.includes('Okafor'),
-    'stat card is for Okafor',
-  );
-  assert(okafor.data.text.includes('31'), 'answer includes 31 points');
-
-  // 4. Catch me up -> recap + scoreboard
-  const recap = await call(sportsReq('Catch me up on what I missed'));
-  assert(recap.data.text.toLowerCase().includes('summit city'), 'recap mentions team');
-  assert(!!recap.data.statCard, 'recap has a scoreboard card');
-
-  // 5. Score question -> scoreboard
-  const score = await call(sportsReq("What's the score?"));
-  assert(score.data.text.includes('98') && score.data.text.includes('94'), 'score answer has both scores');
-
-  // 6. General "who" -> cast
+  // 3. General "who" -> cast
   const who = await call(generalReq('Who is in this scene?'));
   assert(who.status === 200, 'general question returns 200');
+  assert(who.data.fromFallback === true, 'who question used fallback');
   assert(who.data.text.includes('Lindqvist'), 'who answer includes cast member');
-  assert(who.data.statCard === undefined, 'general answer has no stat card');
 
-  // 7. Generic general -> synopsis
+  // 4. Generic general -> synopsis
   const generic = await call(generalReq('Tell me about this'));
   assert(generic.data.text.includes('Northern Expanse'), 'generic answer references title');
+
+  // 5. Sports mode still answers (no stat cards, just a grounded fallback)
+  const sports = await call({
+    mode: 'sports',
+    question: "What's the score?",
+    content: {
+      title: 'Coastal Kings vs. Summit City — Q4',
+      contentType: 'sports',
+      synopsis: 'Fourth quarter, close game.',
+      positionSeconds: 120,
+    },
+  });
+  assert(sports.status === 200, 'sports question returns 200');
+  assert(typeof sports.data.text === 'string' && sports.data.text.length > 0, 'sports answer has text');
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
