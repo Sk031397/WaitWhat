@@ -10,13 +10,9 @@ import { CatalogItem } from './types';
  * ║    thumbnail — card art (landscape ~420x260 looks best)              ║
  * ║    hero      — wide background art (1920x1080)                       ║
  * ║                                                                      ║
- * ║  You can host files anywhere reachable (S3, your own server, a CDN). ║
- * ║  To bundle local files, drop them in assets/media/ and point to      ║
- * ║  their packaged URL — see assets/media/README.md.                    ║
- * ║                                                                      ║
- * ║  IMPORTANT: test each video on the Vega simulator. Not every MP4     ║
- * ║  decodes there — the Sintel/Big Buck Bunny samples below are known   ║
- * ║  good. The old Google gtv-videos-bucket URLs now 403 — don't use.    ║
+ * ║  SideKick is a general "ask about anything you're watching"          ║
+ * ║  companion — every item is a show/movie. (Sports mode exists in the  ║
+ * ║  codebase but no catalog item triggers it right now.)                ║
  * ╚════════════════════════════════════════════════════════════════════╝
  */
 
@@ -26,8 +22,7 @@ interface Media {
   hero: string;
 }
 
-// Placeholder image helper (random art). Replace `thumbnail`/`hero` with your
-// real poster URLs to instantly lift perceived quality.
+// Placeholder image helper (random art). Replace with your real poster URLs.
 const img = (seed: string, w: number, h: number) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
@@ -35,27 +30,169 @@ const img = (seed: string, w: number, h: number) =>
 const SINTEL = 'https://media.w3.org/2010/05/sintel/trailer.mp4';
 const BBB_10S = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
 
+// CC-licensed films from Amazon's vega-sports-app CDN (MIT-0, verified
+// reachable + decode on the Vega sim). Reused here as general film content.
+const CDN = 'https://d1v0fxmwkpxbrg.cloudfront.net/videos/mp4';
+const FILM = {
+  tears: `${CDN}/tears-of-steel/720p/tears-of-steel.mp4`,
+  cosmos: `${CDN}/cosmos-laundromat/720p/cosmos-laundromat.mp4`,
+  glass: `${CDN}/glass-half/720p/glass-half.mp4`,
+};
+
+// Real sports clips + posters hosted on the project's S3 bucket (public-read,
+// verified HTTP 206). License-clear footage the team captured/owns.
+const S3 = 'https://sidekickvegaos.s3.us-east-1.amazonaws.com';
+const sportVid = (name: string) => `${S3}/${name}.mp4`;
+const sportPng = (name: string) => `${S3}/${name}.png`;
+
+// Poster fallback (vega-sports-app CDN, MIT-0, verified HTTP 200) for clips that
+// don't have their own .png in the bucket.
+const SPORTS_IMG = 'https://d1v0fxmwkpxbrg.cloudfront.net/sports-app/images';
+const sportImg = (n: number) => `${SPORTS_IMG}/${n}.jpeg`;
+const sportThumb = (n: number) => `${SPORTS_IMG}/250x250/${n}.jpg`;
+
 /** ⟶ EDIT THIS MAP to use your own content. Keys are catalog item ids. */
 export const MEDIA: Record<string, Media> = {
-  show01:  { video: SINTEL,  thumbnail: img('northern', 420, 260),  hero: img('northern-hero', 1920, 1080) },
-  game01:  { video: SINTEL,  thumbnail: img('kings', 420, 260),     hero: img('kings-hero', 1920, 1080) },
-  show02:  { video: SINTEL,  thumbnail: img('glass', 420, 260),     hero: img('glass-hero', 1920, 1080) },
-  movie01: { video: SINTEL,  thumbnail: img('lanterns', 420, 260),  hero: img('lanterns-hero', 1920, 1080) },
-  movie02: { video: BBB_10S, thumbnail: img('dust', 420, 260),      hero: img('dust-hero', 1920, 1080) },
-  game01b: { video: SINTEL,  thumbnail: img('fullcourt', 420, 260), hero: img('fullcourt-hero', 1920, 1080) },
-  game01c: { video: BBB_10S, thumbnail: img('okafor', 420, 260),    hero: img('okafor-hero', 1920, 1080) },
+  show01:  { video: SINTEL,     thumbnail: img('northern', 420, 260), hero: img('northern-hero', 1920, 1080) },
+  movie03: { video: FILM.tears, thumbnail: img('steel', 420, 260),    hero: img('steel-hero', 1920, 1080) },
+  show02:  { video: SINTEL,     thumbnail: img('glass', 420, 260),    hero: img('glass-hero', 1920, 1080) },
+  movie01: { video: SINTEL,     thumbnail: img('lanterns', 420, 260), hero: img('lanterns-hero', 1920, 1080) },
+  movie02: { video: BBB_10S,    thumbnail: img('dust', 420, 260),     hero: img('dust-hero', 1920, 1080) },
+  movie04: { video: FILM.cosmos,thumbnail: img('cosmos', 420, 260),   hero: img('cosmos-hero', 1920, 1080) },
+  movie05: { video: FILM.glass, thumbnail: img('halflife', 420, 260), hero: img('halflife-hero', 1920, 1080) },
+  // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
+  // basketball matches the seeded game data (Q4, points/rebounds).
+  game01:  { video: sportVid('basketball'),         thumbnail: sportPng('basketball'),         hero: sportPng('basketball') },
+  game02:  { video: sportVid('american_football'),  thumbnail: sportPng('american_football'),  hero: sportPng('american_football') },
+  game03:  { video: sportVid('hockey'),             thumbnail: sportPng('hockey'),             hero: sportPng('hockey') },
+  game04:  { video: sportVid('soccer'),             thumbnail: sportThumb(12), hero: sportImg(12) },
+  game05:  { video: sportVid('tennis'),             thumbnail: sportThumb(14), hero: sportImg(14) },
+  game06:  { video: sportVid('boxing'),             thumbnail: sportThumb(17), hero: sportImg(17) },
+  game07:  { video: sportVid('golf'),               thumbnail: sportThumb(19), hero: sportImg(19) },
 };
 
 const m = (id: string): Media =>
   MEDIA[id] ?? { video: SINTEL, thumbnail: img(id, 420, 260), hero: img(id, 1920, 1080) };
 
 /**
- * The catalog itself — titles, synopsis, and the AI grounding context. The
- * media (video/images) is pulled from the MEDIA map above by id, so you only
- * edit content in one place.
+ * The catalog — all general shows/movies. SideKick answers questions about any
+ * of them (actors, plot, background) in companion mode.
  */
 export const CATALOG: CatalogItem[] = [
-  // ----- Row: Featured (mixed) -----
+  // ----- Row: Live Sports (made-up — fictional teams/players, no real league) -----
+  {
+    id: 'game01',
+    title: 'Coastal Kings vs. Summit City — Q4',
+    row: 'Live Sports',
+    contentType: 'sports',
+    gameId: 'game01',
+    videoUrl: m('game01').video,
+    thumbnail: m('game01').thumbnail,
+    headerImage: m('game01').hero,
+    synopsis:
+      'Fourth quarter of a tight basketball game. Coastal Kings trail Summit City by 4 with 6:12 to play; Summit City is in the bonus.',
+    genres: ['Basketball', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: {
+      homeTeam: 'Summit City',
+      awayTeam: 'Coastal Kings',
+      venue: 'Summit City Arena',
+      star: 'A. Okafor',
+    },
+  },
+  {
+    id: 'game02',
+    title: 'Rivercity Hawks vs. Granite Bay — 2nd Half',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game02').video,
+    thumbnail: m('game02').thumbnail,
+    headerImage: m('game02').hero,
+    synopsis:
+      'Second half of a hard-fought football matchup. Rivercity Hawks lead Granite Bay 21-17 with the ball near midfield.',
+    genres: ['Football', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { homeTeam: 'Granite Bay', awayTeam: 'Rivercity Hawks' },
+  },
+  {
+    id: 'game03',
+    title: 'Frost vs. Harbor Wolves — 3rd Period',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game03').video,
+    thumbnail: m('game03').thumbnail,
+    headerImage: m('game03').hero,
+    synopsis:
+      'Third period of a tied hockey game. The Frost and the Harbor Wolves are deadlocked 2-2 with under eight minutes left.',
+    genres: ['Hockey', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { homeTeam: 'Harbor Wolves', awayTeam: 'Frost' },
+  },
+  {
+    id: 'game04',
+    title: 'Azure United vs. Verde FC — 2nd Half',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game04').video,
+    thumbnail: m('game04').thumbnail,
+    headerImage: m('game04').hero,
+    synopsis:
+      'Second half of a tense soccer derby. Azure United and Verde FC are level 1-1 with twenty minutes to play.',
+    genres: ['Soccer', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { homeTeam: 'Verde FC', awayTeam: 'Azure United' },
+  },
+  {
+    id: 'game05',
+    title: 'Vale vs. Chen — Championship Final',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game05').video,
+    thumbnail: m('game05').thumbnail,
+    headerImage: m('game05').hero,
+    synopsis:
+      'The deciding set of a championship tennis final. Vale leads Chen a set apiece, 4-3 in the third.',
+    genres: ['Tennis', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { playerOne: 'R. Vale', playerTwo: 'L. Chen' },
+  },
+  {
+    id: 'game06',
+    title: 'Mercer vs. Diallo — Title Bout',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game06').video,
+    thumbnail: m('game06').thumbnail,
+    headerImage: m('game06').hero,
+    synopsis:
+      'A heavyweight title bout, round 8 of 12. Mercer and Diallo are trading heavy shots; the cards are close.',
+    genres: ['Boxing', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { fighterOne: 'K. Mercer', fighterTwo: 'O. Diallo' },
+  },
+  {
+    id: 'game07',
+    title: 'Riverside Open — Final Round',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game07').video,
+    thumbnail: m('game07').thumbnail,
+    headerImage: m('game07').hero,
+    synopsis:
+      'Final round of the Riverside Open. Hale leads by one stroke heading into the back nine.',
+    genres: ['Golf', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { leader: 'J. Hale', chasing: 'P. Novak' },
+  },
+
+  // ----- Row: Featured -----
   {
     id: 'show01',
     title: 'The Northern Expanse',
@@ -69,6 +206,10 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Drama', 'Survival'],
     releaseYear: 2025,
     rating: '8.7',
+    sceneMoments: [
+      { atSeconds: 8, text: 'New scene: the crew reaches the supply cache and finds it raided — the moment the season’s central mystery begins.' },
+      { atSeconds: 20, text: 'Watch Elin here — this exchange pays off the fuel-log confrontation from last episode.' },
+    ],
     context: {
       cast: ['Mara Lindqvist as Dr. Elin Vos', 'Theo Grant as Captain Reyes'],
       previousEpisode:
@@ -77,28 +218,25 @@ export const CATALOG: CatalogItem[] = [
     },
   },
   {
-    id: 'game01',
-    title: 'Coastal Kings vs. Summit City — Q4',
+    id: 'movie03',
+    title: 'Tears of Steel',
     row: 'Featured',
-    contentType: 'sports',
-    gameId: 'game01',
-    videoUrl: m('game01').video,
-    thumbnail: m('game01').thumbnail,
-    headerImage: m('game01').hero,
+    contentType: 'movie',
+    videoUrl: m('movie03').video,
+    thumbnail: m('movie03').thumbnail,
+    headerImage: m('movie03').hero,
     synopsis:
-      'Fourth quarter of a tight regular-season basketball game. Coastal Kings trail by 4 with 6:12 to play; Summit City is in the bonus.',
-    genres: ['Sports', 'Live'],
-    releaseYear: 2026,
-    rating: 'LIVE',
+      'A sci-fi short: a group of warriors and scientists in a future Amsterdam attempt to save the world from destructive robots using memories of the past.',
+    genres: ['Sci-Fi', 'Action'],
+    releaseYear: 2024,
+    rating: '8.0',
     context: {
-      homeTeam: 'Summit City',
-      awayTeam: 'Coastal Kings',
-      venue: 'Summit City Arena',
-      star: 'A. Okafor',
+      cast: ['Derek de Lint as Thom', 'Sergio Hasselbaink as Barley'],
+      genre: 'Science fiction',
     },
   },
 
-  // ----- Row: Shows & Movies (general mode) -----
+  // ----- Row: Shows & Movies -----
   {
     id: 'show02',
     title: 'Glass Harbor',
@@ -148,38 +286,36 @@ export const CATALOG: CatalogItem[] = [
     context: { cast: ['Priya Nalin as Asha', 'Diego Marín as Cole'] },
   },
 
-  // ----- Row: Live Sports (sports mode) -----
+  // ----- Row: More to Explore -----
   {
-    id: 'game01b',
-    title: 'Kings vs. City — Full Court',
-    row: 'Live Sports',
-    contentType: 'sports',
-    gameId: 'game01',
-    videoUrl: m('game01b').video,
-    thumbnail: m('game01b').thumbnail,
-    headerImage: m('game01b').hero,
+    id: 'movie04',
+    title: 'Cosmos Laundromat',
+    row: 'More to Explore',
+    contentType: 'movie',
+    videoUrl: m('movie04').video,
+    thumbnail: m('movie04').thumbnail,
+    headerImage: m('movie04').hero,
     synopsis:
-      'Wide-angle broadcast feed of the Coastal Kings at Summit City. Fourth quarter, one-possession game.',
-    genres: ['Sports', 'Live'],
-    releaseYear: 2026,
-    rating: 'LIVE',
-    context: { homeTeam: 'Summit City', awayTeam: 'Coastal Kings', star: 'A. Okafor' },
+      'A suicidal sheep named Franck meets a quirky salesman offering him the deal of a lifetime across infinite possible worlds.',
+    genres: ['Animation', 'Comedy', 'Drama'],
+    releaseYear: 2023,
+    rating: '7.6',
+    context: { cast: ['Pierre as Franck', 'The Salesman'] },
   },
   {
-    id: 'game01c',
-    title: 'Okafor — Player Cam',
-    row: 'Live Sports',
-    contentType: 'sports',
-    gameId: 'game01',
-    videoUrl: m('game01c').video,
-    thumbnail: m('game01c').thumbnail,
-    headerImage: m('game01c').hero,
+    id: 'movie05',
+    title: 'Glass Half',
+    row: 'More to Explore',
+    contentType: 'movie',
+    videoUrl: m('movie05').video,
+    thumbnail: m('movie05').thumbnail,
+    headerImage: m('movie05').hero,
     synopsis:
-      'Isolated camera on Summit City star A. Okafor, having a 31-point, 12-rebound night.',
-    genres: ['Sports', 'Live'],
-    releaseYear: 2026,
-    rating: 'LIVE',
-    context: { homeTeam: 'Summit City', awayTeam: 'Coastal Kings', star: 'A. Okafor' },
+      'A witty animated short about art, perception, and whether the glass is half full — told through a gallery of clashing opinions.',
+    genres: ['Animation', 'Comedy'],
+    releaseYear: 2022,
+    rating: '7.4',
+    context: { cast: ['The Critic', 'The Optimist'] },
   },
 ];
 
@@ -198,3 +334,7 @@ export const itemsForRow = (row: string): CatalogItem[] =>
 
 export const getCatalogItem = (id: string): CatalogItem | undefined =>
   CATALOG.find((c) => c.id === id);
+
+/** Find a scene moment whose timestamp was just crossed between prev and now. */
+export const sceneMomentCrossed = (item: CatalogItem, prev: number, now: number) =>
+  item.sceneMoments?.find((sm) => prev < sm.atSeconds && now >= sm.atSeconds);

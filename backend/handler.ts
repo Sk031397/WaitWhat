@@ -92,7 +92,12 @@ const buildSystemPrompt = (req: AskRequest): string => {
     'pause. Prefer the provided context below when it answers the question; ' +
     'otherwise use your general knowledge to give a helpful, direct answer ' +
     'about the title, cast, plot, sport, teams, or players. Only say you are ' +
-    'not sure if the question is genuinely unanswerable.';
+    'not sure if the question is genuinely unanswerable. ' +
+    'IMPORTANT: SideKick CAN control playback — it can rewind, fast-forward, ' +
+    'and jump to any timestamp, and the app performs the seek for you. Never ' +
+    'say you cannot rewind or that the scene will repeat. If the user asked to ' +
+    'go to a moment, briefly confirm it (e.g. "Here\'s that moment —") and then ' +
+    'describe what is happening there.';
 
   if (req.mode === 'sports' && req.content.gameId) {
     const game = GAME_SNAPSHOTS[req.content.gameId];

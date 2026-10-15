@@ -27,6 +27,20 @@ export interface CatalogItem {
   releaseYear?: number;
   /** Display rating, e.g. "8.7" or "LIVE". */
   rating?: string;
+
+  /**
+   * Scripted proactive "scene insight" moments: at each timestamp SideKick
+   * auto-surfaces a short insight (no question needed) — the general-mode
+   * equivalent of a sports big-play.
+   */
+  sceneMoments?: SceneMoment[];
+}
+
+/** A proactive scene-insight moment for general content. */
+export interface SceneMoment {
+  atSeconds: number;
+  /** Short, 10-foot insight shown proactively. */
+  text: string;
 }
 
 export type SideKickMode = 'general' | 'sports';
@@ -50,6 +64,12 @@ export interface SideKickAnswer {
   askedAtLabel?: string;
   /** True when SideKick surfaced this proactively (no user question). */
   proactive?: boolean;
+  /** True for a general-mode scene insight (vs. a sports big-play). */
+  insight?: boolean;
+  /** When the question asked to jump to a time, the resolved target (seconds). */
+  jumpedToSeconds?: number;
+  /** Formatted jumpedToSeconds, e.g. "0:10". */
+  jumpedToLabel?: string;
 }
 
 /** A marker on the seek bar showing where a question was asked. */
@@ -57,6 +77,8 @@ export interface AskMarker {
   id: string;
   positionSeconds: number;
   mode: SideKickMode;
+  /** The answer captured at this timestamp (for re-surfacing on marker select). */
+  answer?: SideKickAnswer;
 }
 
 export interface StatCard {

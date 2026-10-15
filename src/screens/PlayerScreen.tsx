@@ -4,7 +4,7 @@ import { VideoProvider, useVideoContext } from '@sidekick/player/useVideoContext
 import { VideoPlayer } from '@sidekick/player/VideoPlayer';
 import { SideKickOverlay } from '@sidekick/sidekick/SideKickOverlay';
 import { PlayerControls } from '@sidekick/components/PlayerControls';
-import { getCatalogItem } from '@sidekick/data/catalog';
+import { getCatalogItem, sceneMomentCrossed } from '@sidekick/data/catalog';
 import { bigPlayCrossed, playerStatCard } from '@sidekick/data/seededSports';
 import { SideKickAnswer } from '@sidekick/data/types';
 import { formatTime } from '@sidekick/util/formatTime';
@@ -18,7 +18,8 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
   itemId,
   onBack,
 }) => {
-  const { current, setCurrent, setProgress, mode, askMarkers } = useVideoContext();
+  const { current, setCurrent, setProgress, mode, askMarkers, selectMarker, seekRequest } =
+    useVideoContext();
   const item = getCatalogItem(itemId);
 
   // Raw W3C player handle (captured via VideoPlayer onReady) for seeking.
@@ -33,6 +34,7 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
   // is crossed; passed to the overlay which surfaces it without a question.
   const [proactive, setProactive] = useState<SideKickAnswer | null>(null);
   const firedBigPlays = useRef<Set<number>>(new Set());
+  const firedMoments = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (item) setCurrent(item);
@@ -56,6 +58,19 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
     setControlsVisible(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_MS);
+  }, []);
+
+  // Tap anywhere on the video toggles controls: hide if shown, show if hidden.
+  // (The SideKick panel sits above this layer and intercepts its own taps, so
+  // interacting with the Ask panel never toggles the controls.)
+  const toggleControls = useCallback(() => {
+    setControlsVisible((v) => {
+      const next = !v;
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      // When turning on via tap, still auto-hide after inactivity.
+      if (next) hideTimer.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_MS);
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -82,6 +97,26 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
     },
     [duration, pokeControls],
   );
+
+  // Absolute seek (used by timeline marker selection).
+  const seekTo = useCallback(
+    (seconds: number) => {
+      const p = playerRef.current;
+      if (p) {
+        const next = Math.max(0, Math.min(duration || Infinity, seconds));
+        p.currentTime = next;
+        setCurrentTime(next);
+      }
+      pokeControls();
+    },
+    [duration, pokeControls],
+  );
+
+  // React to a marker selection: jump the video to that question's timestamp.
+  useEffect(() => {
+    if (seekRequest) seekTo(seekRequest.seconds);
+    // token changes each selection
+  }, [seekRequest?.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!current) return <View style={styles.root} />;
 
@@ -120,7 +155,37 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
               });
             }
           }
+
+          // Proactive scene-insight detection (general content, any mode).
+          if (current) {
+            const sm = sceneMomentCrossed(current, currentTime, t);
+            if (sm && !firedMoments.current.has(sm.atSeconds)) {
+              firedMoments.current.add(sm.atSeconds);
+              // eslint-disable-next-line no-console
+              console.info(`[SideKick] PROACTIVE insight fired at ${t.toFixed(1)}s: ${sm.text}`);
+              setProactive({
+                id: `insight-${sm.atSeconds}`,
+                mode,
+                question: '',
+                text: sm.text,
+                askedAtSeconds: t,
+                askedAtLabel: formatTime(t),
+                proactive: true,
+                insight: true,
+              });
+            }
+          }
         }}
+      />
+
+      {/* Full-screen tap layer: tap the video to toggle controls on/off.
+          Rendered directly above the video but BELOW the top bar, controls,
+          and the SideKick panel — so taps on those UI elements are handled by
+          them, and only taps on bare video toggle the controls. */}
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={toggleControls}
+        accessibilityLabel="Toggle playback controls"
       />
 
       {/* Top-left: now playing + back */}
@@ -165,6 +230,7 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
         currentTime={currentTime}
         duration={duration}
         markers={askMarkers}
+        onSelectMarker={selectMarker}
         onPlayPause={onPlayPause}
         onSeekBack={() => seekBy(-SEEK_STEP)}
         onSeekForward={() => seekBy(SEEK_STEP)}

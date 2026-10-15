@@ -17,7 +17,9 @@ import { StatCard } from './StatCard';
 import { buildAskRequest, suggestedPrompts } from './ModeRouter';
 import { ask } from './bedrockClient';
 import { formatTime } from '@sidekick/util/formatTime';
+import { parseSeekIntent, parseFractionalPhrase } from '@sidekick/util/parseTimePhrase';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
+import { useTypewriter } from '@sidekick/util/useTypewriter';
 import { InterestTracker, LearnedInterest } from './InterestTracker';
 import { playerStatCard } from '@sidekick/data/seededSports';
 
@@ -36,7 +38,8 @@ import { playerStatCard } from '@sidekick/data/seededSports';
 export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = ({
   proactive,
 }) => {
-  const { mode, snapshot, addAskMarker } = useVideoContext();
+  const { mode, snapshot, addAskMarker, resurface, requestSeek, durationSeconds } =
+    useVideoContext();
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
@@ -122,17 +125,101 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
     }
   }, [proactive, announce, playAnswerIn]);
 
+  // When the user selects a timeline marker, re-surface that saved answer.
+  useEffect(() => {
+    if (resurface?.answer) {
+      setAnswer(resurface.answer);
+      setOpen(true);
+      playAnswerIn();
+    }
+    // token changes each selection, so repeat selects re-fire
+  }, [resurface?.token]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const accent = mode === 'sports' ? theme.colors.sports : theme.colors.primary;
+
+  // Typewriter reveal of the answer text (only once the answer is in, not while
+  // pending). Keyed on answer.id so each new answer re-reveals.
+  const revealTarget = answer && !answer.pending ? answer.text : '';
+  const { shown: revealedText, done: revealDone } = useTypewriter(
+    revealTarget,
+    true,
+  );
 
   const handleSubmit = useCallback(
     async (question: string) => {
       const snap = snapshot();
       if (!snap.item) return;
 
-      const askedAtSeconds = snap.positionSeconds;
+      const dur = durationSeconds || Infinity;
+      const clampTime = (s: number) => Math.max(0, dur === Infinity ? s : Math.min(dur, s));
+
+      let jumpedToSeconds: number | null = null;
+
+      // ----- Fractional / landmark navigation ("go to the middle/end/quarter") -----
+      // Needs a known duration. Treated as a pure control command: seek + a
+      // confident confirmation, no model round-trip.
+      const frac = parseFractionalPhrase(question, durationSeconds || 0);
+      if (frac !== null) {
+        const target = clampTime(frac);
+        requestSeek(target);
+        const label = formatTime(target);
+        addAskMarker(target, snap.mode);
+        const confirm: SideKickAnswer = {
+          id: `${Date.now()}`,
+          mode: snap.mode,
+          question,
+          text: `Jumped to ${label}.`,
+          askedAtSeconds: target,
+          askedAtLabel: label,
+          jumpedToSeconds: target,
+          jumpedToLabel: label,
+        };
+        setAnswer(confirm);
+        announce(confirm);
+        playAnswerIn();
+        return;
+      }
+
+      // ----- Playback control intent (rewind / forward / jump) -----
+      const intent = parseSeekIntent(question);
+      if (intent) {
+        const base = snap.positionSeconds;
+        const target = clampTime(
+          intent.absoluteSeconds !== null
+            ? intent.absoluteSeconds
+            : base + (intent.relativeSeconds ?? 0),
+        );
+        requestSeek(target);
+        const label = formatTime(target);
+
+        // PURE control command ("rewind", "go back 10s") → confident local
+        // confirmation, NO model call (so SideKick never "apologizes").
+        if (intent.pureControl) {
+          const verb = intent.verb ?? 'Jumped';
+          addAskMarker(target, snap.mode);
+          const confirm: SideKickAnswer = {
+            id: `${Date.now()}`,
+            mode: snap.mode,
+            question,
+            text: `${verb} to ${label}.`,
+            askedAtSeconds: target,
+            askedAtLabel: label,
+            jumpedToSeconds: target,
+            jumpedToLabel: label,
+          };
+          setAnswer(confirm);
+          announce(confirm);
+          playAnswerIn();
+          return; // no Bedrock round-trip for a bare control command
+        }
+        // "jump AND tell me about it" → ground the answer at the target time.
+        jumpedToSeconds = target;
+      }
+
+      // The answer is grounded at the jumped-to time when present, else "now".
+      const askedAtSeconds = jumpedToSeconds ?? snap.positionSeconds;
       const askedAtLabel = formatTime(askedAtSeconds);
-      // Drop a marker on the seek bar where the question was asked.
-      addAskMarker(askedAtSeconds, snap.mode);
+      const jumpedToLabel = jumpedToSeconds !== null ? formatTime(jumpedToSeconds) : undefined;
 
       const pendingId = `${Date.now()}`;
       setAnswer({
@@ -143,6 +230,8 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         pending: true,
         askedAtSeconds,
         askedAtLabel,
+        jumpedToSeconds: jumpedToSeconds ?? undefined,
+        jumpedToLabel,
       });
 
       const req = buildAskRequest(snap.item, askedAtSeconds, snap.mode, question);
@@ -157,10 +246,14 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         fromFallback: res.fromFallback,
         askedAtSeconds,
         askedAtLabel,
+        jumpedToSeconds: jumpedToSeconds ?? undefined,
+        jumpedToLabel,
       };
       setAnswer(finalAnswer);
       announce(finalAnswer);
       playAnswerIn();
+      // Drop a navigable marker carrying this answer at the (possibly jumped) time.
+      addAskMarker(askedAtSeconds, snap.mode, finalAnswer);
 
       // Adaptive learning: did this question reveal a repeated interest?
       const justLearned = tracker.current.record(question);
@@ -171,7 +264,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         );
       }
     },
-    [snapshot, addAskMarker, announce, playAnswerIn],
+    [snapshot, addAskMarker, announce, playAnswerIn, requestSeek, durationSeconds],
   );
 
   return (
@@ -266,7 +359,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
               {answer.proactive ? (
                 <View style={[styles.proactivePill, { borderColor: accent }]}>
                   <Text style={[styles.proactivePillText, { color: accent }]}>
-                    ⚡ BIG PLAY
+                    {answer.insight ? '✨ SCENE INSIGHT' : '⚡ BIG PLAY'}
                   </Text>
                 </View>
               ) : (
@@ -274,7 +367,14 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                   “{answer.question}”
                 </Text>
               )}
-              {answer.askedAtLabel ? (
+              {answer.jumpedToLabel ? (
+                <View style={[styles.jumpPill, { borderColor: accent }]}>
+                  <Text style={[styles.jumpPillText, { color: accent }]}>
+                    ⤷ Jumped to {answer.jumpedToLabel}
+                  </Text>
+                </View>
+              ) : null}
+              {answer.askedAtLabel && !answer.jumpedToLabel ? (
                 <Text style={styles.anchor}>
                   {answer.proactive ? 'at ' : 'asked at '}
                   {answer.askedAtLabel}
@@ -287,9 +387,12 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                 </View>
               ) : (
                 <>
-                  <Text style={styles.answerText}>{answer.text}</Text>
-                  {answer.statCard ? <StatCard data={answer.statCard} /> : null}
-                  {answer.fromFallback ? (
+                  <Text style={styles.answerText}>
+                    {revealedText}
+                    {!revealDone ? <Text style={{ color: accent }}>▋</Text> : null}
+                  </Text>
+                  {revealDone && answer.statCard ? <StatCard data={answer.statCard} /> : null}
+                  {revealDone && answer.fromFallback ? (
                     <Text style={styles.fallbackNote}>offline answer</Text>
                   ) : null}
                 </>
@@ -437,6 +540,19 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     fontSize: theme.font.caption,
     marginBottom: theme.spacing.sm,
+  },
+  jumpPill: {
+    alignSelf: 'flex-start',
+    borderWidth: 2,
+    borderRadius: theme.radius.pill,
+    paddingVertical: theme.spacing.xs / 2,
+    paddingHorizontal: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  jumpPillText: {
+    fontSize: theme.font.caption,
+    fontWeight: theme.weight.bold,
+    letterSpacing: theme.tracking.wide,
   },
   proactivePill: {
     alignSelf: 'flex-start',
