@@ -1,30 +1,29 @@
-# SideKick — 3-minute demo recording plan
+# Wait, What? — 3-minute demo recording plan
 
-**The one line:** *"SideKick turns the timeline into something you talk to."*
+**The one line:** *"Wait, What? turns the timeline into something you talk to."*
 Say it near the top and let the demo prove it.
 
 Judges don't have to watch past 3:00, so **lead with the wow**. Target ~2:40.
 
 Panel to play to: Fire TV **Voice & AI** leads, the **NBA / sports** PM, and
-**AWS Bedrock** people. The script hits all three and showcases SideKick's
+**AWS Bedrock** people. The script hits all three and showcases its
 headline moments:
 1. **Talk to your timeline** — ask, then navigate by natural language, then
    revisit any question on the scrubber (Idea — your signature).
 2. **Live Bedrock answer** (real, `fromFallback:false`) — Tech.
-3. **Context-aware sports mode** — open a game and SideKick re-themes and
+3. **Context-aware sports mode** — open a game and Wait, What? re-themes and
    answers "catch me up" / "what's the score" grounded on the game (Idea + sports).
-4. **It sees the scene** — "What's in this scene?" runs **Amazon Rekognition** on
-   the title's image, chained into Bedrock for a natural description (Tech + CV).
-5. **It anticipates on anything** — a proactive scene insight on a show, too (Idea).
-6. **Accessible by design** — answers spoken via VoiceView for low-vision
+4. **It anticipates on anything** — a proactive scene insight on a show, too (Idea).
+5. **Accessible by design** — answers spoken via VoiceView for low-vision
    viewers; non-blocking, platform-correct (Design/Impact).
 
-> NOTE: SideKick has two modes from one gesture. **Companion mode** (shows/movies)
+> NOTE: Wait, What? has two modes from one gesture. **Companion mode** (shows/movies)
 > answers anything + proactive scene insights. **Sports mode** (a "Live Sports"
-> row of games) re-themes and grounds its live Bedrock answers on the game
+> row of 9 games) re-themes and grounds its live Bedrock answers on the game
 > context (teams, venue, situation). All teams/players are **made-up** (no real
 > leagues/trademarks) over **real, license-clear sports footage** the team hosts
-> on S3.
+> on S3: basketball, football, hockey, soccer, tennis, boxing, wrestling, baseball,
+> and rowing.
 
 ---
 
@@ -50,12 +49,12 @@ headline moments:
 Home screen; slowly move focus across cards (hero cross-fade + spring-glow focus,
 cinematic vignette all show here).
 > "Every time you watch something, you reach for your phone — who's that actor,
->  what did I miss, what's this scene. SideKick answers all of it **on the TV,
+>  what did I miss, what's this scene. Wait, What? answers all of it **on the TV,
 >  without pausing**, because it knows what you're watching and exactly where you
 >  are in it."
 
 ### 0:18–1:00 — Live AI + timeline anchor (the core)
-Open a show. Let playback run 2–3s (obviously live). Open **Ask SideKick** — the
+Open a show. Let playback run 2–3s (obviously live). Open **Ask Wait, What?** — the
 panel slides out. Focus the field (keyboard/mic comes up) and ask:
 **"Who is in this scene?"**
 > "I'm not pausing — the show keeps playing."
@@ -73,47 +72,38 @@ Open the panel again and type/say navigation phrases, letting the playhead jump:
 >  apologizes about rewinding, because it actually controls playback."
 
 ### Sports mode (context-aware — for the sports judge)
-Back out, open a **Live Sports** game (e.g. Coastal Kings vs. Summit City). The
-UI re-themes (green accent, SPORTS MODE). Ask **"Catch me up"** or **"What's the
-score?"** → a live Bedrock answer grounded on the game context (teams, venue,
-situation).
-> "On a game, SideKick knows it's sports — it re-themes and answers in the
+Back out, open a **Live Sports** game (e.g. Coastal Kings vs. Summit City —
+basketball, or Ironside vs. Crestfall — baseball). The UI re-themes (green
+accent, SPORTS MODE). Ask **"Catch me up"** or **"What's the score?"** → a live
+Bedrock answer grounded on the game context (teams, venue, situation).
+> "On a game, Wait, What? knows it's sports — it re-themes and answers in the
 >  moment, grounded on the game, so I can jump in late and catch up."
-(Teams/players are fictional; the footage is our own license-clear sports clips.)
-
-### It sees the scene (computer vision — for the Rekognition/CV judge)
-Still on a sports title, open the panel and tap **"👁 What's in this scene?"** →
-a natural scene description appears (e.g. soccer: *"Azure United faces Verde FC
-in a thrilling soccer match…"*).
-> "This runs **Amazon Rekognition** on the scene image — labels and any on-screen
->  text — then chains that into **Bedrock** to describe the scene in plain
->  language. Two AWS AI services working together."
-(Works across all seven sports titles — basketball, football, hockey, soccer,
-tennis, boxing, wrestling. CV runs on the scene image; Vega has no live-frame capture.)
+(Teams/players are fictional; the footage is our own license-clear sports clips —
+nine sports total: basketball, football, hockey, soccer, tennis, boxing, wrestling,
+baseball, and rowing.)
 
 ### It anticipates on a show too (proactive scene insight)
 Open a show and let it reach a scene moment — a **✨ SCENE INSIGHT** card surfaces
 unprompted.
-> "And I didn't even ask — SideKick noticed the scene turn and surfaced what's
+> "And I didn't even ask — Wait, What? noticed the scene turn and surfaced what's
 >  happening. It anticipates, not just answers."
 
 ### 2:00–2:20 — Revisit the timeline (navigable Q&A)
 Open the controls; focus the **"Your questions:"** chips. Select an earlier one.
-> "Every question I asked is saved on the timeline — select one and SideKick
+> "Every question I asked is saved on the timeline — select one and Wait, What?
 >  jumps back to that moment and brings the answer with it."
 
 ### 2:20–2:40 — Under the hood (for the AWS judges)
 Voiceover over the UI:
 > "Every answer is a live **Amazon Bedrock** call, grounded on the content and
 >  timestamp, behind **API Gateway + Lambda** with least-privilege IAM — no
->  credentials ever ship in the TV app. 'What's in this scene?' adds **Amazon
->  Rekognition**, chained into Bedrock — two AWS AI services composed. Built on
->  Vega's native **W3C media** stack, not react-native-video. Answers are
->  announced through **VoiceView** so low-vision viewers hear what's on screen."
+>  credentials ever ship in the TV app. Built on Vega's native **W3C media**
+>  stack, not react-native-video. Answers are announced through **VoiceView**
+>  so low-vision viewers hear what's on screen."
 
 ### 2:40–2:50 — Close
 Home, one clean focus sweep.
-> "SideKick — the companion that understands what you're watching, and how *you*
+> "Wait, What? — the companion that understands what you're watching, and how *you*
 >  watch. One button, zero pauses."
 
 ---
@@ -129,7 +119,7 @@ Home, one clean focus sweep.
 
 ## Don't
 - Don't over-explain the voice limitation. Use the text/mic box naturally. In the
-  written feedback, be honest: Vega has no app-level STT, so SideKick uses the
+  written feedback, be honest: Vega has no app-level STT, so Wait, What? uses the
   platform's system-keyboard mic — the correct, supported path.
 - Don't imply the sports teams/leagues are real — they're invented. If asked,
   say the footage is your own license-clear clips and the teams are made up.

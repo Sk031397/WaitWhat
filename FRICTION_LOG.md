@@ -1,7 +1,7 @@
-# SideKick — Friction Log & Product Feedback
+# Wait, What? — Friction Log & Product Feedback
 
 Submitted for the optional friction-log bonus. Every entry below is a real issue
-hit while building SideKick on Vega OS + AWS during the hackathon window. Format
+hit while building Wait, What? on Vega OS + AWS during the hackathon window. Format
 per entry: **Task → Steps → Expected vs. Actual → Severity → Workaround →
 Suggestion.**
 
@@ -83,10 +83,10 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Actual:** None — the surface is a native hardware sink. Rules out
   "analyze what's literally on screen now."
 - **Severity:** Medium (feature-limiting).
-- **Workaround:** Scoped CV to the content's poster/scene image — the "What's
-  in this scene?" action runs **Amazon Rekognition** (`DetectLabels` +
-  `DetectText`) on the S3 image and chains the result into Bedrock Nova for a
-  natural description — rather than analyzing live frames.
+- **Workaround:** Explored CV on the content's poster/scene image instead — ran
+  **Amazon Rekognition** (`DetectLabels` + `DetectText`) on the S3 image and
+  chained the result into Bedrock Nova for a natural description; ultimately
+  scoped the feature out of the final demo.
 - **Suggestion:** A frame-grab API would enable on-device CV viewing features.
 
 ### 7. Useful packages missing from the OS 1.2 profile
@@ -186,14 +186,13 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Amazon Nova via Bedrock Converse** was the smoothest part of the whole
   build: first-party access with no Marketplace step, instant, and the Converse
   API is clean. The `maxTokens`/adaptive-retry guidance mattered.
-- **Amazon Rekognition** was the same happy story: `DetectLabels` + `DetectText`
-  worked **first-party and instantly** — no AWS Marketplace subscription gate
-  (the exact thing that blocked Claude), just an IAM action and go. Chaining its
-  output into Bedrock Nova (vision → natural description) was straightforward and
-  is the most satisfying two-service composition in the build. One caveat we
-  worked around: generic `DetectLabels` sometimes mislabels stylized sports
-  stills (basketball → "baseball"), so we anchor the description on the known
-  title/sport from our catalog and treat the vision labels as supporting detail.
+- **Amazon Rekognition** was equally easy: `DetectLabels` + `DetectText` worked
+  **first-party and instantly** — no AWS Marketplace subscription gate (the exact
+  thing that blocked Claude), just an IAM action and go. We explored chaining its
+  output into Bedrock Nova (vision → natural description), which worked cleanly.
+  One caveat noted: generic `DetectLabels` sometimes mislabels stylized sports
+  stills (basketball → "baseball"), so any production use should anchor on the
+  known title/sport from the catalog and treat labels as supporting detail.
 - **The RN 0.72 template** scaffolds a correct, buildable project immediately.
 
 ## Would we build on Vega again?

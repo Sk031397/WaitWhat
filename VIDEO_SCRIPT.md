@@ -1,4 +1,4 @@
-# SideKick — teleprompter script (read-on-camera, timed to ~2:45)
+# Wait, What? — teleprompter script (read-on-camera, timed to ~2:45)
 
 This is the word-for-word script to read while recording. Each block = one
 on-screen action + the exact narration. Total target **2:45** (hard cap 3:00;
@@ -15,18 +15,21 @@ Record at 1080p, VD with GUI. Keep each line tight — if you run long, cut the
 hero cross-fade, focus glow, and vignette all show.
 
 > "Every time you watch something, you reach for your phone — who's that actor,
-> what did I miss, what is this. **SideKick answers all of it on the TV, without
+> what did I miss, what is this. **Wait, What? answers all of it on the TV, without
 > pausing.** It turns the timeline into something you talk to."
+
+`[DELIVERY]` Beat after "what is this." — then say the name "**Wait, What?**" as
+the punchline (it echoes the confused questions you just listed), then continue.
 
 ---
 
 ## 0:15–0:50 · LIVE AI + TIMELINE ANCHOR  (≈70 words)
 
 `[ACTION]` Open a show. Let it play 2–3 seconds (clearly live). Open **Ask
-SideKick** — panel slides in. Focus the field, type/dictate: **"Who is in this
+Wait, What?** — panel slides in. Focus the field, type/dictate: **"Who is in this
 scene?"** Submit.
 
-> "I open SideKick and just ask — and notice the show keeps playing underneath.
+> "I open Wait, What? and just ask — and notice the show keeps playing underneath.
 > I'm never pausing."
 
 `[ACTION]` When the answer lands, point to the **"asked at 0:4X"** line and the
@@ -56,20 +59,13 @@ the playhead jump each time.
 
 ---
 
-## 1:30–2:00 · SPORTS MODE + COMPUTER VISION  (≈75 words)
+## 1:30–2:00 · SPORTS MODE  (≈50 words)
 
 `[ACTION]` Back out. Open a **Live Sports** game. UI re-themes green / "SPORTS
 MODE". Ask **"Catch me up."** Live answer grounded on the game.
 
 > "Open a game and the same gesture becomes a **sports companion** — it
 > re-themes and catches me up, grounded on the game, so I can jump in late."
-
-`[ACTION]` Still on the game, open the panel, tap **"👁 What's in this scene?"**
-A natural description appears.
-
-> "And it can **see** the scene. This runs **Amazon Rekognition** on the frame
-> image, then chains it into **Bedrock** to describe what's happening — two AWS
-> AI services working together."
 
 ---
 
@@ -94,9 +90,8 @@ earlier one — it jumps back and re-shows that answer.
 
 > "Under the hood: every answer is a live **Amazon Bedrock Nova** call behind
 > **API Gateway and Lambda** with least-privilege IAM — no credentials ever ship
-> in the app. Vision adds **Amazon Rekognition**. It's built on Vega's native
-> **W3C media** stack, and answers are spoken through **VoiceView** for
-> low-vision viewers."
+> in the app. It's built on Vega's native **W3C media** stack, and answers are
+> spoken through **VoiceView** for low-vision viewers."
 
 ---
 
@@ -104,7 +99,7 @@ earlier one — it jumps back and re-shows that answer.
 
 `[ACTION]` Return Home, one clean focus sweep.
 
-> "SideKick — it understands what you're watching, and how *you* watch. One
+> "Wait, What? — it understands what you're watching, and how *you* watch. One
 > button, zero pauses. And it drops into any streaming app."
 
 ---
@@ -115,7 +110,7 @@ earlier one — it jumps back and re-shows that answer.
 | Hook | 0:15 | keep |
 | Live AI + anchor | 0:50 | keep |
 | NL navigation | 1:30 | keep (signature) |
-| Sports + CV | 2:00 | keep |
+| Sports mode | 2:00 | keep |
 | Anticipates + revisit | 2:20 | keep |
 | Under the hood | 2:38 | **cut first** |
 | Close | 2:45 | keep |

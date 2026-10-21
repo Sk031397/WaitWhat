@@ -1,7 +1,7 @@
-# SideKick — talk to your timeline
+# Wait, What? — talk to your timeline
 
 **Track:** Fire TV (Vega OS) · **Mini challenge:** AWS Builder
-**Priority categories:** AI-enhanced viewing, sports, computer vision, multi-modal UX, accessibility
+**Priority categories:** AI-enhanced viewing, sports, multi-modal UX, accessibility
 
 ---
 
@@ -9,7 +9,7 @@
 
 Everyone does the same thing while watching TV: something happens on screen and
 you reach for your phone. *Who is that actor? What did I miss? What's this scene
-about?* You pause, you Google, you lose the moment. SideKick fixes that on the
+about?* You pause, you Google, you lose the moment. Wait, What? fixes that on the
 **biggest screen in the house** — you ask, and it answers **without pausing**,
 grounded on exactly what's playing and where you are in it.
 
@@ -22,29 +22,24 @@ anchors every answer to the moment you asked, lets you *navigate by voice/words*
 
 While a show plays full-screen (playback never stops):
 
-- **Ask about anything on screen.** Hold-to-ask → SideKick answers via a live
+- **Ask about anything on screen.** Hold-to-ask → Wait, What? answers via a live
   **Amazon Bedrock** call, grounded on the title, synopsis, cast, and your exact
   playback position. The answer appears in a non-blocking side panel.
 - **Talk to your timeline.** Say where you want to go in plain language —
   *"take me to 0:10 and tell me what's happening"*, *"go to the middle"*,
-  *"go a quarter of the way"*, *"go to the end"* — and SideKick seeks there **and**
+  *"go a quarter of the way"*, *"go to the end"* — and Wait, What? seeks there **and**
   explains the moment. It controls playback; it never says "I can't rewind."
 - **Every question lives on the scrubber.** Each ask drops a marker at that
   timestamp; a "Your questions" row lets you **jump back to any moment and
   re-surface its answer** — a navigable Q&A history over the video.
 - **It adapts to sports.** Open a game from the **Live Sports** row and the same
-  gesture enters **sports mode**: SideKick re-themes and grounds its live Bedrock
+  gesture enters **sports mode**: Wait, What? re-themes and grounds its live Bedrock
   answers on the game context (teams, venue, situation), so "catch me up" or
   "what's the score" answer in the moment. Teams/players are fictional (no real
   leagues/trademarks) over our own license-clear sports footage.
-- **It anticipates on shows too.** At key scene moments SideKick **proactively
+- **It anticipates on shows too.** At key scene moments Wait, What? **proactively
   surfaces an insight** ("New scene — the crew finds the cache raided; the
   season's mystery begins") without being asked.
-- **It can look at the scene.** "What's in this scene?" runs **Amazon
-  Rekognition** on the content's image (labels + any on-screen text), then feeds
-  that into Bedrock to describe the scene in a natural sentence — two AWS AI
-  services chained. (CV runs on the poster/scene image; Vega has no live-frame
-  capture.)
 - **It's accessible.** Answers are announced through **VoiceView**, so a
   low-vision viewer hears what's on screen and what's happening — a viewing
   companion that *narrates*, not just displays.
@@ -69,13 +64,9 @@ While a show plays full-screen (playback never stops):
   Gateway (HTTP API) + AWS Lambda** with **least-privilege IAM**. The Lambda
   builds a context-grounded system prompt and returns a short, 10-foot answer.
   Live in the demo — the app receives real model answers (`fromFallback:false`).
-- **Amazon Rekognition** powers the "What's in this scene?" computer-vision
-  action: the same Lambda runs `DetectLabels` + `DetectText` on the content's
-  image (in S3), then **chains the result into Bedrock Nova** to produce a
-  natural scene description — two AWS AI services working together.
-- No AWS credentials ever ship in the TV app; Bedrock/Rekognition are only
-  called server-side. A deterministic seeded fallback (mirrored client + server)
-  keeps the app answering if the model or network is unavailable.
+- No AWS credentials ever ship in the TV app; Bedrock is only called server-side.
+  A deterministic seeded fallback (mirrored client + server) keeps the app
+  answering if the model or network is unavailable.
 
 ## Challenges we ran into
 
@@ -84,7 +75,7 @@ Vega is a young platform, and building correctly meant discovering its edges
 - **No app-level speech-to-text** and **no app-level TTS** — so voice input uses
   the system-keyboard mic, and spoken output uses VoiceView. Both are the
   *supported* paths; we built to them instead of fighting them.
-- **No video-frame-capture API**, which shaped what "computer vision" could be.
+- **No video-frame-capture API** on Vega — noted and worked around.
 - Several packages (**linear-gradient, kepler-ui-components, react-native-screens**)
   aren't in the OS 1.2 profile — we worked around each.
 - Public **Lambda Function URLs were blocked** on the account → we fronted the
@@ -111,11 +102,11 @@ adaptive retry, mirrored fallback).
 
 - Real detected scene boundaries (vs. curated moments) for proactivity.
 - A first-class **"Describe this scene"** accessibility mode.
-- Package SideKick as a **drop-in companion layer any streaming app can embed** —
+- Package Wait, What? as a **drop-in companion layer any streaming app can embed** —
   the pipeline is content-agnostic: it takes *what's playing + where you are + a
   question* and returns a grounded, timeline-anchored answer.
 
 ## Built with
 
 Fire TV / Vega OS · React Native · `@amazon-devices/react-native-w3cmedia` ·
-Amazon Bedrock (Nova) · Amazon Rekognition · AWS Lambda · Amazon API Gateway · IAM · VoiceView
+Amazon Bedrock (Nova) · AWS Lambda · Amazon API Gateway · IAM · VoiceView

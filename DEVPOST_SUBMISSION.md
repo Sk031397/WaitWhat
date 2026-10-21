@@ -1,4 +1,4 @@
-# SideKick — Devpost submission (copy-paste into the form fields)
+# Wait, What? — Devpost submission (copy-paste into the form fields)
 
 Each `##` heading below maps to a field on the Devpost "Enter a Submission" page.
 Paste the body of each section into the matching field. Fill the bracketed
@@ -7,10 +7,10 @@ Paste the body of each section into the matching field. Fill the bracketed
 ---
 
 ## Project name
-SideKick — talk to your timeline
+Wait, What? — talk to your timeline
 
 ## Elevator pitch (one sentence, ~200 char field)
-Ask about anything you're watching — without pausing. SideKick answers on the TV
+Ask about anything you're watching — without pausing. Wait, What? answers on the TV
 via live Amazon Bedrock, lets you navigate by natural language, and anchors every
 answer to the moment on your timeline.
 
@@ -21,7 +21,7 @@ answer to the moment on your timeline.
 ### Inspiration
 Everyone does the same thing while watching TV: something happens on screen and
 you reach for your phone — *who's that actor? what did I miss? what's this scene?*
-You pause, you Google, you lose the moment. SideKick fixes that on the **biggest
+You pause, you Google, you lose the moment. Wait, What? fixes that on the **biggest
 screen in the house**: you ask, and it answers **without pausing**, grounded on
 exactly what's playing and where you are in it.
 
@@ -37,7 +37,7 @@ While a show plays full-screen (playback never stops):
   non-blocking side panel.
 - **Talk to your timeline** — say where to go in plain language ("take me to
   0:10 and tell me what's happening," "go to the middle," "a quarter of the way,"
-  "go to the end"); SideKick seeks there **and** explains the moment. It controls
+  "go to the end"); Wait, What? seeks there **and** explains the moment. It controls
   playback — it never refuses to rewind.
 - **Every question lives on the scrubber** — each ask drops a marker; a "Your
   questions" row lets you jump back to any moment and re-surface its answer.
@@ -45,9 +45,6 @@ While a show plays full-screen (playback never stops):
   Bedrock answers on the game context (teams, venue, situation) so "catch me up"
   / "what's the score" answer in the moment. Teams/players are fictional over our
   own license-clear footage.
-- **It sees the scene** — "What's in this scene?" runs **Amazon Rekognition**
-  (`DetectLabels` + `DetectText`) on the content image, then chains the result
-  into **Bedrock** for a natural description — two AWS AI services composed.
 - **It anticipates** — proactive scene insights surface without being asked.
 - **It's accessible** — answers are announced through **VoiceView** for
   low-vision viewers.
@@ -61,23 +58,22 @@ While a show plays full-screen (playback never stops):
   gradient/vignette. Voice input via the supported system-keyboard mic path.
 - **Backend (AWS Builder).** **Amazon Bedrock Nova Micro** via the Converse API
   behind **API Gateway (HTTP API) + Lambda** with **least-privilege IAM**;
-  context-grounded prompt, live (`fromFallback:false`). **Amazon Rekognition**
-  for the vision action, chained into Bedrock. No AWS credentials ship in the TV
-  app; a mirrored seeded fallback keeps it answering offline.
+  context-grounded prompt, live (`fromFallback:false`). No AWS credentials ship
+  in the TV app; a mirrored seeded fallback keeps it answering offline.
 
 ### Challenges we ran into
 Vega is a young platform (full detail in our friction log): no app-level STT (we
 use the system-keyboard mic) and no app-level TTS (we use VoiceView); no
-video-frame-capture API (so CV runs on the scene image); several packages absent
-from the OS 1.2 profile; public Lambda Function URLs blocked on the account (we
-used API Gateway); and Claude gated by AWS Marketplace billing (we used
-first-party Nova, which worked instantly).
+video-frame-capture API; several packages absent from the OS 1.2 profile; public
+Lambda Function URLs blocked on the account (we used API Gateway); and Claude
+gated by AWS Marketplace billing (we used first-party Nova, which worked
+instantly).
 
 ### Accomplishments we're proud of
 A working, platform-correct Vega app verified on the Vega Virtual Device; a live,
-deployed Bedrock + Rekognition integration (not mocked) with graceful fallback;
-and a genuinely new interaction — talking to the timeline (ask, navigate,
-revisit) — plus proactive insights and a real accessibility story.
+deployed Bedrock integration (not mocked) with graceful fallback; and a genuinely
+new interaction — talking to the timeline (ask, navigate, revisit) — plus
+proactive insights and a real accessibility story.
 
 ### What we learned
 How to build *with* Vega's constraints rather than against them (W3C media, the
@@ -87,13 +83,13 @@ mirrored fallback).
 
 ### What's next
 Real detected scene boundaries for proactivity; a first-class "Describe this
-scene" accessibility mode; and packaging SideKick as a drop-in companion layer
+scene" accessibility mode; and packaging Wait, What? as a drop-in companion layer
 any streaming app can embed — the pipeline is content-agnostic.
 
 ---
 
 ## Built with  (tags field — comma-separated)
-fire-tv, vega-os, react-native, amazon-bedrock, amazon-nova, amazon-rekognition,
+fire-tv, vega-os, react-native, amazon-bedrock, amazon-nova,
 aws-lambda, amazon-api-gateway, aws-iam, w3c-media, voiceview, typescript
 
 ---
@@ -102,7 +98,7 @@ aws-lambda, amazon-api-gateway, aws-iam, w3c-media, voiceview, typescript
 Fire TV (Vega OS)
 
 ## Priority categories (select/mention)
-AI-enhanced viewing · sports · computer vision · multi-modal UX · accessibility
+AI-enhanced viewing · sports · multi-modal UX · accessibility
 
 ## Mini challenge(s) entered
 AWS Builder
@@ -127,9 +123,6 @@ AWS Builder
   (`com.amazon.inputmethod.service`) for the keyboard-mic voice path.
 - **Amazon Bedrock (Nova Micro)** via `@aws-sdk/client-bedrock-runtime` Converse
   API — the grounded Q&A answers.
-- **Amazon Rekognition** via `@aws-sdk/client-rekognition` (`DetectLabels` +
-  `DetectText`) — the "What's in this scene?" computer-vision action, chained
-  into Bedrock.
 - **AWS Lambda + API Gateway (HTTP API) + IAM** — the serverless `/ask` endpoint
   with least-privilege permissions.
 - **VoiceView** (via `AccessibilityInfo.announceForAccessibility`) — spoken
@@ -143,15 +136,12 @@ AWS Builder
   `vega project doctor` gave clear, actionable validation.
 - **Amazon Nova via Bedrock Converse** was the smoothest part of the build:
   first-party access, no Marketplace step, instant, clean API.
-- **Amazon Rekognition** was equally easy — `DetectLabels` + `DetectText` worked
-  first-party and instantly, and chaining its output into Bedrock (vision →
-  natural description) was straightforward: our favorite two-service composition.
 - The RN 0.72 template scaffolds a correct, buildable project immediately.
 
 **3) What needs work?** (summary — full detail in the friction log below)
 - **No app-level speech-to-text** and **no app-level TTS** — the two biggest gaps
   for voice-first TV apps; we used the system-keyboard mic and VoiceView.
-- **No video-frame-capture API** — shaped CV to run on the scene image.
+- **No video-frame-capture API** on Vega — noted and worked around.
 - `react-native-video` fails on Vega with no hint toward W3C media; setting `src`
   without `load()` black-screens silently; surface-view lifecycle churn can crash
   the media stack with only a native abort.
@@ -169,12 +159,11 @@ world and more about discovering platform edges afterward (the player stack,
 voice, missing packages) — mostly surfaced only at the point of failure.
 
 **5) Would you build with these devices/services again? (Yes/No + why)**
-**Yes.** The core — W3C media, RN 0.72, the Vega CLI, and Nova + Rekognition on
-Bedrock — is coherent and productive once you learn its shape, and first-party
-Bedrock/Rekognition access was frictionless. The biggest unlocks for the next
-wave of apps would be an **app-level push-to-talk STT API** and **app-level TTS**;
-those two alone would open up voice-first TV experiences that today require
-workarounds.
+**Yes.** The core — W3C media, RN 0.72, the Vega CLI, and Nova on Bedrock — is
+coherent and productive once you learn its shape, and first-party Bedrock access
+was frictionless. The biggest unlocks for the next wave of apps would be an
+**app-level push-to-talk STT API** and **app-level TTS**; those two alone would
+open up voice-first TV experiences that today require workarounds.
 
 ---
 

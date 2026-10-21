@@ -37,4 +37,4 @@ export const buildAskRequest = (
 export const suggestedPrompts = (mode: SideKickMode): string[] =>
   mode === 'sports'
     ? ['Catch me up', 'What\'s the score?', 'Who\'s winning?']
-    : ['Who is in this scene?', 'What happened last episode?', 'What\'s this show about?'];
+    : ['What happened last episode?', 'What\'s this show about?', 'Who are the main characters?'];

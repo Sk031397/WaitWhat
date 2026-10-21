@@ -14,7 +14,7 @@ import { theme } from '@sidekick/theme';
 import { useVideoContext } from '@sidekick/player/useVideoContext';
 import { QuestionInput } from './QuestionInput';
 import { buildAskRequest, suggestedPrompts } from './ModeRouter';
-import { ask, vision } from './bedrockClient';
+import { ask } from './bedrockClient';
 import { formatTime } from '@sidekick/util/formatTime';
 import { parseSeekIntent, parseFractionalPhrase } from '@sidekick/util/parseTimePhrase';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
@@ -250,46 +250,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
     [snapshot, addAskMarker, announce, playAnswerIn, requestSeek, durationSeconds],
   );
 
-  // "What's in this scene?" — run Amazon Rekognition on the current item's
-  // poster/scene image (by S3 key derived from its image URL).
-  const handleVision = useCallback(async () => {
-    const snap = snapshot();
-    if (!snap.item) return;
-    const imageUrl = snap.item.headerImage || snap.item.thumbnail || '';
-    // Only our S3 media bucket images have Rekognition labels; derive the key.
-    const key = imageUrl.includes('sidekickvegaos')
-      ? imageUrl.split('/').pop()?.split('?')[0] ?? ''
-      : '';
-    const pendingId = `${Date.now()}`;
-    setAnswer({ id: pendingId, mode: snap.mode, question: "What's in this scene?", text: '', pending: true });
-    setOpen(true);
-    if (!key) {
-      const a: SideKickAnswer = {
-        id: pendingId, mode: snap.mode, question: "What's in this scene?",
-        text: 'Scene analysis is available on the sports titles.', insight: true, proactive: true,
-      };
-      setAnswer(a); playAnswerIn(); return;
-    }
-    const res = await vision(key, {
-      title: snap.item.title,
-      // The known sport/genre from the catalog — anchors the description so
-      // Rekognition's generic mislabels (e.g. basketball→baseball) can't drive it.
-      sport: snap.item.genres?.[0],
-    });
-    const a: SideKickAnswer = {
-      id: pendingId,
-      mode: snap.mode,
-      question: "What's in this scene?",
-      text: res.text,
-      fromFallback: res.fromFallback,
-      insight: true,
-      proactive: true,
-    };
-    setAnswer(a);
-    announce(a);
-    playAnswerIn();
-  }, [snapshot, announce, playAnswerIn]);
-
   return (
     <View style={styles.root} pointerEvents="box-none">
       {/* ---- Floating trigger tab (right edge) ---- */}
@@ -304,7 +264,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
           style={[styles.tab, { borderColor: accent }, tabFocused && styles.tabFocused]}
         >
           <View style={[styles.tabDot, { backgroundColor: accent }]} />
-          <Text style={styles.tabText}>Ask SideKick</Text>
+          <Text style={styles.tabText}>Ask Wait, What?</Text>
         </Pressable>
       ) : null}
 
@@ -419,20 +379,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
           <Text style={styles.a11yText}>🔊 Answers are read aloud with VoiceView</Text>
         </View>
 
-        {/* Computer vision — Amazon Rekognition on the scene image */}
-        <Pressable
-          onPress={handleVision}
-          accessibilityRole="button"
-          accessibilityLabel="What's in this scene? Analyze with computer vision."
-          style={({ pressed }) => [
-            styles.visionBtn,
-            { borderColor: accent },
-            pressed && styles.visionBtnFocused,
-          ]}
-        >
-          <Text style={styles.visionBtnText}>👁  What's in this scene?</Text>
-        </Pressable>
-
         {/* Real voice/text entry (system keyboard mic = Vega STT) */}
         <QuestionInput mode={mode} onSubmit={handleSubmit} />
 
@@ -522,23 +468,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     fontSize: theme.font.caption,
     letterSpacing: theme.tracking.wide,
-  },
-  visionBtn: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    backgroundColor: theme.colors.surfaceSolid,
-  },
-  visionBtnFocused: { opacity: 0.7 },
-  visionBtnText: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.font.body,
-    fontWeight: '600',
   },
   embedNote: {
     color: theme.colors.textMuted,

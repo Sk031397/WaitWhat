@@ -56,13 +56,15 @@ export const MEDIA: Record<string, Media> = {
   movie05: { video: FILM.glass, thumbnail: img('halflife', 420, 260), hero: img('halflife-hero', 1920, 1080) },
   // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
   // basketball matches the seeded game data (Q4, points/rebounds).
-  game01:  { video: sportVid('basketball'),         thumbnail: sportImg('basketball'),         hero: sportImg('basketball') },
-  game02:  { video: sportVid('american_football'),  thumbnail: sportImg('american_football'),  hero: sportImg('american_football') },
-  game03:  { video: sportVid('hockey'),             thumbnail: sportImg('hockey'),             hero: sportImg('hockey') },
-  game04:  { video: sportVid('soccer'),             thumbnail: sportImg('soccer'),             hero: sportImg('soccer') },
-  game05:  { video: sportVid('tennis'),             thumbnail: sportImg('tennis'),             hero: sportImg('tennis') },
-  game06:  { video: sportVid('boxing'),             thumbnail: sportImg('boxing'),             hero: sportImg('boxing') },
-  game07:  { video: sportVid('wrestling'),          thumbnail: sportImg('wrestling'),          hero: sportImg('wrestling') },
+  game01:  { video: sportVid('basketball'),        thumbnail: sportImg('basketball'),        hero: sportImg('basketball') },
+  game02:  { video: sportVid('american_football'), thumbnail: sportImg('american_football'), hero: sportImg('american_football') },
+  game03:  { video: sportVid('hockey'),            thumbnail: sportImg('hockey'),            hero: sportImg('hockey') },
+  game04:  { video: sportVid('soccer'),            thumbnail: sportImg('soccer'),            hero: sportImg('soccer') },
+  game05:  { video: sportVid('tennis'),            thumbnail: sportImg('tennis'),            hero: sportImg('tennis') },
+  game06:  { video: sportVid('boxing'),            thumbnail: sportImg('boxing'),            hero: sportImg('boxing') },
+  game07:  { video: sportVid('wrestling'),         thumbnail: sportImg('wrestling'),         hero: sportImg('wrestling') },
+  game08:  { video: sportVid('baseball'),          thumbnail: sportImg('baseball'),          hero: sportImg('baseball') },
+  game09:  { video: sportVid('rowing'),            thumbnail: sportImg('rowing'),            hero: sportImg('rowing') },
 };
 
 const m = (id: string): Media =>
@@ -183,6 +185,36 @@ export const CATALOG: CatalogItem[] = [
     releaseYear: 2026,
     rating: 'LIVE',
     context: { wrestlerOne: 'T. Kessler', wrestlerTwo: 'D. Boone' },
+  },
+  {
+    id: 'game08',
+    title: 'Ironside vs. Crestfall — 7th Inning',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game08').video,
+    thumbnail: m('game08').thumbnail,
+    headerImage: m('game08').hero,
+    synopsis:
+      'Seventh inning of a tense baseball matchup. Ironside lead Crestfall 4-3 with runners on first and second and two outs.',
+    genres: ['Baseball', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { homeTeam: 'Crestfall', awayTeam: 'Ironside' },
+  },
+  {
+    id: 'game09',
+    title: 'Meridian vs. Stonebridge — Finals Heat',
+    row: 'Live Sports',
+    contentType: 'sports',
+    videoUrl: m('game09').video,
+    thumbnail: m('game09').thumbnail,
+    headerImage: m('game09').hero,
+    synopsis:
+      'The A-final of a championship rowing regatta. Meridian and Stonebridge are stroke-for-stroke with 500 metres to go.',
+    genres: ['Rowing', 'Live'],
+    releaseYear: 2026,
+    rating: 'LIVE',
+    context: { teamOne: 'Meridian', teamTwo: 'Stonebridge' },
   },
 
   // ----- Row: Featured -----

@@ -1,25 +1,24 @@
-# SideKick — talk to your timeline
+# Wait, What? — talk to your timeline
 
-> Hold one button and ask about anything you're watching. SideKick answers in a
+> Hold one button and ask about anything you're watching. Wait, What? answers in a
 > non-blocking overlay **without pausing playback**, anchors every answer to the
 > moment you asked, lets you **navigate by natural language**, and **proactively
 > surfaces** what's happening — and it announces answers through **VoiceView**
 > for low-vision viewers.
 
 Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — Fire TV track
-(priority categories: *AI-enhanced viewing*, *sports*, *computer vision*,
-*multi-modal UX*, *accessibility*) with the **AWS Builder** mini challenge
-(Amazon Bedrock + Rekognition).
+(priority categories: *AI-enhanced viewing*, *sports*, *multi-modal UX*,
+*accessibility*) with the **AWS Builder** mini challenge (Amazon Bedrock).
 
 ---
 
 ## The idea
 
 Everyone reaches for their phone while watching — *who's that actor, what did I
-miss, what's this scene, what are his stats?* SideKick answers on the TV,
+miss, what's this scene, what are his stats?* Wait, What? answers on the TV,
 **without pausing**, grounded on what's playing and where you are in it.
 
-The deeper idea: **the timeline becomes something you talk to.** SideKick is one
+The deeper idea: **the timeline becomes something you talk to.** Wait, What? is one
 companion pipeline that:
 
 - **answers** questions about the current title/scene via a live Amazon Bedrock
@@ -30,15 +29,12 @@ companion pipeline that:
 - **remembers** — every question drops a marker on the scrubber, and a
   "Your questions" row lets you jump back to any moment and re-surface its answer;
 - **adapts to sports** — open a game and the same gesture enters **sports
-  mode**: SideKick re-themes and grounds its live Bedrock answers on the game
+  mode**: Wait, What? re-themes and grounds its live Bedrock answers on the game
   context (teams, venue, situation), so "catch me up" or "what's the score"
   answer in the moment (teams are fictional; footage is our own license-clear
   clips);
 - **anticipates** — on shows too, at key scene moments it proactively surfaces a
   scene insight without being asked;
-- **sees the scene** — "What's in this scene?" runs **Amazon Rekognition**
-  (labels + on-screen text) and feeds it to Bedrock for a natural description
-  (CV on the scene image; Vega has no live-frame capture);
 - **narrates** — answers are announced through VoiceView, so a low-vision viewer
   hears what's on screen.
 
@@ -91,7 +87,7 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 ├── package.json               # react-native-w3cmedia — NOT react-native-video
 ├── src/
 │   ├── App.tsx                # stack navigator: Home → Player (no drawer)
-│   ├── index.js               # AppRegistry.registerComponent('SideKick', …)
+│   ├── index.js               # AppRegistry.registerComponent(appName, …) from app.json
 │   ├── config.ts              # ASK_ENDPOINT (deployed backend URL)
 │   ├── screens/
 │   │   ├── HomeScreen.tsx      # hero header + horizontal content rows
@@ -115,7 +111,7 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   ├── data/                  # catalog (shows/movies) + shared types
 │   └── theme/                 # 10-foot scaling + colors + motion tokens
 └── backend/                   # the AWS Builder piece
-    ├── handler.ts             # Lambda: Bedrock Nova (Converse) + Rekognition vision + seeded fallback
+    ├── handler.ts             # Lambda: Bedrock Nova (Converse) + seeded fallback
     ├── template.yaml          # SAM reference (deployed via API Gateway + Lambda)
     ├── devServer.ts           # local http wrapper for the handler
     └── test.ts                # 14 assertions over the fallback path (no AWS needed)
@@ -161,11 +157,11 @@ source $HOME/vega/env && npm run build:debug
 > `.vpkg` for armv7 / aarch64 / x86_64.
 >
 > The demo browses shows/movies on the home grid; open any title to watch.
-> Open the **Ask SideKick** panel, then type or (on a device) hold the Alexa
+> Open the **Ask Wait, What?** panel, then type or (on a device) hold the Alexa
 > button to dictate a question. Try a navigation phrase like *"go to the middle"*
 > or *"take me to 0:10 and tell me what's happening."* A scene insight surfaces
 > on its own a few seconds in. Open a **Live Sports** game to see sports mode:
-> SideKick re-themes and answers "catch me up" / "what's the score" grounded on
+> Wait, What? re-themes and answers "catch me up" / "what's the score" grounded on
 > the game context (fictional teams over our own license-clear footage).
 
 ### 2. Backend (the Bedrock endpoint)
@@ -212,7 +208,7 @@ Bedrock call when connected. The two fallbacks are intentionally mirrored.
 
 | Criterion | Where it shows up |
 |---|---|
-| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, a **Rekognition→Bedrock vision chain**, untrusted-input validation, graceful seeded fallback |
+| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, untrusted-input validation, graceful seeded fallback |
 | **Design** | One hold-to-ask gesture, non-blocking slide-out panel, **animated focus bloom**, cinematic vignette, timeline-anchored answers with a **navigable Q&A history**, context-themed **sports mode** (accent re-theme), 10-foot scaling, accessible focus (border + scale, not color alone) |
 | **Potential Impact** | Near-universal behaviors (ask about what you're watching, catch up on a game) solved without leaving the screen — **plus an accessibility layer** (answers spoken via VoiceView for low-vision viewers) and a **content-agnostic pipeline any streaming app could embed** |
 | **Quality of the Idea** | **Talk to your timeline** — ask, navigate by natural language, revisit any question on the scrubber, get proactive scene insights, and an adaptive **sports mode** that re-themes and grounds live answers on the game. One companion that understands what you're watching *and where you are in it*. |
@@ -221,7 +217,7 @@ Bedrock call when connected. The two fallbacks are intentionally mirrored.
 
 ## Who this is for (potential impact)
 
-SideKick solves behaviors that are near-universal, and it reaches audiences a
+Wait, What? solves behaviors that are near-universal, and it reaches audiences a
 plain companion app would miss:
 
 - **Everyone who reaches for their phone mid-show** — "who is that actor?",
@@ -230,12 +226,12 @@ plain companion app would miss:
   middle", "go back to 0:10 and tell me what's happening" — natural-language
   navigation that seeks *and* explains, instead of blind scrubbing.
 - **Sports fans who join late** — open a game and ask "catch me up" or "what's
-  the score"; SideKick answers in the moment, grounded on the game context
+  the score"; Wait, What? answers in the moment, grounded on the game context
   (fictional teams/players over our own license-clear footage).
-- **Low-vision viewers (accessibility).** SideKick's answers are announced
+- **Low-vision viewers (accessibility).** Its answers are announced
   through **VoiceView**, so a viewer who can't read the panel still hears what's
   on screen and what's happening. On VegaOS, VoiceView is the supported
-  speech-output path; SideKick is built to use it.
+  speech-output path; Wait, What? is built to use it.
 - **Any streaming app, not just this one.** The pipeline is content-agnostic —
   it takes "what's playing + where you are + a question" and returns a grounded
   answer. It's designed to drop into an existing catalog app as a companion
@@ -253,18 +249,12 @@ plain companion app would miss:
   calls `ConverseCommand` with `maxTokens: 256` and `temperature: 0.3`.
   Deployed and live — the app receives real model-generated answers
   (`fromFallback: false`), with the seeded fallback reserved for offline/outage.
-- **Amazon Rekognition** (`@aws-sdk/client-rekognition`) — the "What's in this
-  scene?" computer-vision action. The Lambda runs `DetectLabels` + `DetectText`
-  on the content's image (in S3), then **chains the result into Bedrock Nova** to
-  produce a natural scene description — two AWS AI services composed. (CV runs on
-  the poster/scene image; Vega has no live-frame capture.)
 - **Amazon API Gateway (HTTP API) + AWS Lambda** — public HTTPS `/ask` endpoint
-  with CORS; the Lambda holds the Bedrock + Rekognition integration. (A Function
-  URL was tried first; this account blocks public Function URLs, so an HTTP API
-  fronts the Lambda instead — documented in the build history.)
+  with CORS; the Lambda holds the Bedrock integration. (A Function URL was tried
+  first; this account blocks public Function URLs, so an HTTP API fronts the
+  Lambda instead — documented in the build history.)
 - **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on foundation
-  models + inference profiles, `rekognition:DetectLabels`/`DetectText`, and
-  `s3:GetObject` on the media bucket only.
+  models + inference profiles only.
 
 **Practices applied from AWS guidance**
 

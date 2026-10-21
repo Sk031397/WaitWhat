@@ -1,7 +1,7 @@
 schema-version = 1
 
 [package]
-title = "SideKick"
+title = "Wait, What?"
 version = "1.0.0"
 id = "com.sidekick.viewingcompanion"
 icon = "@image/app_icon.png"
