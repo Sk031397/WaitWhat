@@ -30,12 +30,16 @@ companion pipeline that:
   "Your questions" row lets you jump back to any moment and re-surface its answer;
 - **adapts to sports** — open a game and the same gesture enters **sports
   mode**: Wait, What? re-themes and grounds its live Bedrock answers on the game
-  context (teams, venue, situation), so "catch me up" or "what's the score"
-  answer in the moment (teams are fictional; footage is our own license-clear
-  clips);
+  context and the real frames, so "catch me up" or "break down this play"
+  answer in the moment (amateur, license-clear footage; no real teams);
 - **sees the screen** — every question carries real frames extracted from the
   video up to your position, so "what's happening right now?" is answered from
   the footage itself (and it can't spoil what's ahead);
+- **anticipates** — when a new scene starts, a small ✨ scene-insight card
+  surfaces what's on screen without being asked (pre-generated from the real
+  frames, so it costs nothing at playback time);
+- **is one hold away** — hold the remote's Menu (☰) button from anywhere in the
+  player and the panel opens with the keyboard and its mic already up;
 - **narrates** — answers are announced through VoiceView, so a low-vision viewer
   hears what's on screen.
 
@@ -106,15 +110,17 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   │   ├── SideKickOverlay.tsx # non-blocking slide-out answer panel
 │   │   ├── QuestionInput.tsx   # TextInput → system-keyboard mic (Vega voice path)
 │   │   ├── ModeRouter.ts       # builds the grounded AskRequest
+│   │   ├── insights.ts         # when a proactive scene insight is due
 │   │   └── bedrockClient.ts    # calls /ask; shows an error if unreachable
 │   ├── util/
 │   │   ├── parseTimePhrase.ts  # natural-language seek: "0:10", "the middle", "a quarter"
 │   │   └── formatTime.ts
-│   ├── data/                  # catalog (shows/movies) + shared types
+│   ├── data/                  # catalog, shared types, generated insights.ts
 │   └── theme/                 # 10-foot scaling + colors + motion tokens
 └── backend/                   # the AWS Builder piece
     ├── handler.ts             # Lambda: loads frames from S3 → Bedrock Nova Lite (Converse)
     ├── template.yaml          # SAM reference (deployed via API Gateway + Lambda)
+    ├── generateInsights.ts    # offline: frames → scene changes → Nova Lite notes
     ├── devServer.ts           # local http wrapper for the handler
     └── test.ts                # validation, auth, and error-path checks (no AWS needed)
 ```
@@ -162,8 +168,8 @@ source $HOME/vega/env && npm run build:debug
 > Open the **Ask Wait, What?** panel, then type or (on a device) hold the Alexa
 > button to dictate a question. Try a navigation phrase like *"go to the middle"*
 > or *"take me to 0:10 and tell me what's happening."* Open a **Live Sports** game to see sports mode:
-> Wait, What? re-themes and answers "catch me up" / "what's the score" grounded on
-> the game context (fictional teams over our own license-clear footage).
+> Wait, What? re-themes and answers "catch me up" / "what just happened?" grounded on
+> what's on screen (license-clear amateur footage, no real teams).
 
 ### 2. Backend (the Bedrock endpoint)
 
@@ -187,6 +193,12 @@ sam deploy --guided --template-file template.yaml
 Frames: run `scripts/extract-frames.sh` once (and again whenever a video
 changes) to extract a frame every 2s from every catalog video and upload them
 to `s3://sidekickvegaos/frames/<videoId>/<second>.jpg`.
+
+Scene insights: after the frames are up, run `cd backend && npm run insights`
+(needs ffmpeg; set `FFMPEG=/path/to/ffmpeg` if it isn't on PATH). It finds scene
+changes in each video's frames, asks Nova Lite for a one-line note per new
+scene, and writes `src/data/insights.ts`, which ships with the app. Rebuild the
+app afterwards.
 
 Then point the app at the endpoint — in `src/config.ts` set `ASK_ENDPOINT`, or
 call `setAskEndpoint('https://…/ask')` at startup. (A live API Gateway endpoint
@@ -238,9 +250,9 @@ plain companion app would miss:
 - **Anyone who wants to move around the content hands-free** — "take me to the
   middle", "go back to 0:10 and tell me what's happening" — natural-language
   navigation that seeks *and* explains, instead of blind scrubbing.
-- **Sports fans who join late** — open a game and ask "catch me up" or "what's
-  the score"; Wait, What? answers in the moment, grounded on the game context
-  (fictional teams/players over our own license-clear footage).
+- **Sports fans who join late** — open a game and ask "catch me up" or "what
+  just happened?"; Wait, What? answers in the moment, grounded on what's on
+  screen (license-clear amateur footage, no real teams).
 - **Low-vision viewers (accessibility).** Its answers are announced
   through **VoiceView**, so a viewer who can't read the panel still hears what's
   on screen and what's happening. On VegaOS, VoiceView is the supported

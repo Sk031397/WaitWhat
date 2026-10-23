@@ -10,9 +10,8 @@ import {CatalogItem} from './types';
  * ║    thumbnail — card art (landscape ~420x260 looks best)              ║
  * ║    hero      — wide background art (1920x1080)                       ║
  * ║                                                                      ║
- * ║  SideKick is a general "ask about anything you're watching"          ║
- * ║  companion — every item is a show/movie. (Sports mode exists in the  ║
- * ║  codebase but no catalog item triggers it right now.)                ║
+ * ║  Wait, What? answers about anything you're watching; sports items    ║
+ * ║  (contentType 'sports') switch it into sports mode automatically.    ║
  * ╚════════════════════════════════════════════════════════════════════╝
  */
 
@@ -73,7 +72,7 @@ export const MEDIA: Record<string, Media> = {
     thumbnail: img('halflife', 420, 260),
     hero: img('halflife-hero', 1920, 1080),
   },
-  // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
+  // Real, license-clear amateur sports footage (see catalog entries below).
   game01: {
     video: sportVid('basketball'),
     thumbnail: sportImg('basketball'),
@@ -133,146 +132,183 @@ const m = (id: string): Media =>
  * of them (actors, plot, background) in companion mode.
  */
 export const CATALOG: CatalogItem[] = [
-  // ----- Row: Live Sports (made-up — fictional teams/players, no real league) -----
+  // ----- Row: Live Sports — titles and context describe what each clip actually
+  // shows (amateur/pickup footage, no real teams, no scoreboard, so no scores). -----
   {
     id: 'game01',
-    title: 'Coastal Kings vs. Summit City — Q4',
+    title: 'Blacktop 1-on-1 — Drive to the Hoop',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game01').video,
     thumbnail: m('game01').thumbnail,
     headerImage: m('game01').hero,
     synopsis:
-      'Fourth quarter of a tight basketball game. Coastal Kings trail Summit City by 4 with 6:12 to play; Summit City is in the bonus.',
-    genres: ['Basketball', 'Live'],
+      "Drone's-eye view of a sunny outdoor concrete court: two young players go one-on-one at the top of the key, then the ball handler drives to the rim.",
+    genres: ['Basketball', 'Pickup'],
     releaseYear: 2026,
     rating: 'LIVE',
     context: {
-      homeTeam: 'Summit City',
-      awayTeam: 'Coastal Kings',
-      venue: 'Summit City Arena',
-      star: 'A. Okafor',
+      format: '1-on-1 pickup game',
+      setting: 'Outdoor concrete court on a sunny afternoon',
+      camera: 'Overhead drone, moving with the play',
+      onTheBall: 'Player in the white tank top and red shoes',
+      defender: 'Player in the white shirt with black sleeves',
     },
   },
   {
     id: 'game02',
-    title: 'Rivercity Hawks vs. Granite Bay — 2nd Half',
+    title: 'Gold & White vs. Green — Pileup at the 30',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game02').video,
     thumbnail: m('game02').thumbnail,
     headerImage: m('game02').hero,
     synopsis:
-      'Second half of a hard-fought football matchup. Rivercity Hawks lead Granite Bay 21-17 with the ball near midfield.',
-    genres: ['Football', 'Live'],
+      'An amateur football game on a sunny grass field: a play develops between the 40- and 30-yard lines and ends in a pileup around the 30 as the referee signals.',
+    genres: ['Football', 'Amateur'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {homeTeam: 'Granite Bay', awayTeam: 'Rivercity Hawks'},
+    context: {
+      teams:
+        'White jerseys with gold trim vs. green-and-gold jerseys (fictional, unnamed)',
+      setting: 'Grass field with a small covered grandstand, sunny with clouds',
+      camera: 'Sideline, at field level',
+    },
   },
   {
     id: 'game03',
-    title: 'Frost vs. Harbor Wolves — 3rd Period',
+    title: 'Rink Scrimmage — White vs. Black',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game03').video,
     thumbnail: m('game03').thumbnail,
     headerImage: m('game03').hero,
     synopsis:
-      'Third period of a tied hockey game. The Frost and the Harbor Wolves are deadlocked 2-2 with under eight minutes left.',
-    genres: ['Hockey', 'Live'],
+      'Pickup hockey at an indoor rink: skaters in white and black jerseys battle for the puck along the boards, then a black-jersey skater carries it in toward the net.',
+    genres: ['Hockey', 'Scrimmage'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {homeTeam: 'Harbor Wolves', awayTeam: 'Frost'},
+    context: {
+      teams: 'White jerseys with light-blue pants vs. black jerseys',
+      setting: 'Indoor rink, practice-style scrimmage, no crowd',
+      camera: 'Ice level, along the boards',
+    },
   },
   {
     id: 'game04',
-    title: 'Azure United vs. Verde FC — 2nd Half',
+    title: 'Five-a-Side — Maroon Breaks for Goal',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game04').video,
     thumbnail: m('game04').thumbnail,
     headerImage: m('game04').hero,
     synopsis:
-      'Second half of a tense soccer derby. Azure United and Verde FC are level 1-1 with twenty minutes to play.',
-    genres: ['Soccer', 'Live'],
+      'A small-sided game on an outdoor turf pitch: a player in maroon carries the ball past a defender in a blue bib and drives a shot toward goal.',
+    genres: ['Soccer', 'Small-sided'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {homeTeam: 'Verde FC', awayTeam: 'Azure United'},
+    context: {
+      teams: 'Maroon shirts vs. light-blue training bibs',
+      setting: 'Fenced artificial-turf pitch, overcast day',
+      camera: 'Pitch level, following the ball',
+    },
   },
   {
     id: 'game05',
-    title: 'Vale vs. Chen — Championship Final',
+    title: 'Baseline Rally — Overhead Court Cam',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game05').video,
     thumbnail: m('game05').thumbnail,
     headerImage: m('game05').hero,
     synopsis:
-      'The deciding set of a championship tennis final. Vale leads Chen a set apiece, 4-3 in the third.',
-    genres: ['Tennis', 'Live'],
+      'Straight-down drone view of a blue hard court: two singles players trade groundstrokes from the baselines as the net casts a long afternoon shadow.',
+    genres: ['Tennis', 'Singles'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {playerOne: 'R. Vale', playerTwo: 'L. Chen'},
+    context: {
+      players:
+        'One player in white (left baseline), one in red (right baseline)',
+      setting: 'Outdoor blue hard court, late-afternoon sun',
+      camera: 'Overhead drone, fixed',
+    },
   },
   {
     id: 'game06',
-    title: 'Mercer vs. Diallo — Title Bout',
+    title: 'Ring Bout — Blue Gloves vs. Red Gloves',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game06').video,
     thumbnail: m('game06').thumbnail,
     headerImage: m('game06').hero,
     synopsis:
-      'A heavyweight title bout, round 8 of 12. Mercer and Diallo are trading heavy shots; the cards are close.',
-    genres: ['Boxing', 'Live'],
+      'Close-up inside the ropes: a fighter in blue gloves works his jab against a guarded opponent in red gloves, then they close in and trade at short range.',
+    genres: ['Boxing', 'Bout'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {fighterOne: 'K. Mercer', fighterTwo: 'O. Diallo'},
+    context: {
+      fighters:
+        'Blue gloves and blue trunks vs. red-and-gold gloves with a script tattoo down his spine',
+      setting: 'Boxing ring under teal lights',
+      camera: 'Handheld, inside the ring',
+    },
   },
   {
     id: 'game07',
-    title: 'Kessler vs. Boone — Title Match',
+    title: 'Lucha Libre — Masked Tag-Team Clash',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game07').video,
     thumbnail: m('game07').thumbnail,
     headerImage: m('game07').hero,
     synopsis:
-      'The main-event wrestling title match. Kessler and Boone are trading momentum in the third period with the crowd on its feet.',
-    genres: ['Wrestling', 'Live'],
+      'A packed lucha libre arena: a masked wrestler in red pants takes his opponent to the mat as the referee waves, while a gold-masked partner waits on the apron.',
+    genres: ['Wrestling', 'Lucha Libre'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {wrestlerOne: 'T. Kessler', wrestlerTwo: 'D. Boone'},
+    context: {
+      format: 'Tag-team lucha libre match',
+      setting: 'Arena with a big crowd and video screens',
+      camera: 'Ringside',
+    },
   },
   {
     id: 'game08',
-    title: 'Ironside vs. Crestfall — 7th Inning',
+    title: 'Sandlot Baseball — At-Bat Under the Palms',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game08').video,
     thumbnail: m('game08').thumbnail,
     headerImage: m('game08').hero,
     synopsis:
-      'Seventh inning of a tense baseball matchup. Ironside lead Crestfall 4-3 with runners on first and second and two outs.',
-    genres: ['Baseball', 'Live'],
+      'Behind-the-plate view at a dusty, palm-lined diamond: a batter in blue swings, then the catcher in black stands and watches the play unfold in the field.',
+    genres: ['Baseball', 'Amateur'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {homeTeam: 'Crestfall', awayTeam: 'Ironside'},
+    context: {
+      teams: 'Blue jerseys (batting) vs. black-and-grey uniforms (fielding)',
+      setting: 'Dirt infield, palm trees, sunny tropical day',
+      camera: 'Behind home plate, through the backstop',
+    },
   },
   {
     id: 'game09',
-    title: 'Meridian vs. Stonebridge — Finals Heat',
+    title: 'Rowing — Three Crews on the Lake',
     row: 'Live Sports',
     contentType: 'sports',
     videoUrl: m('game09').video,
     thumbnail: m('game09').thumbnail,
     headerImage: m('game09').hero,
     synopsis:
-      'The A-final of a championship rowing regatta. Meridian and Stonebridge are stroke-for-stroke with 500 metres to go.',
-    genres: ['Rowing', 'Live'],
+      "Drone shot over calm, sunny water: three rowing crews pull in parallel past a waterfront town while a coach's launch motors alongside.",
+    genres: ['Rowing', 'Training'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: {teamOne: 'Meridian', teamTwo: 'Stonebridge'},
+    context: {
+      crews: 'Three boats in parallel lanes; the nearest is a four',
+      setting: 'Wide lake or river beside a waterfront town, summer day',
+      camera: 'High overhead drone, tracking the boats',
+    },
   },
 
   // ----- Row: Featured -----

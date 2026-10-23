@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {View, Text, TextInput, Pressable, StyleSheet} from 'react-native';
 import {SideKickMode} from '@sidekick/data/types';
 import {theme} from '@sidekick/theme';
@@ -22,17 +22,26 @@ import {theme} from '@sidekick/theme';
 interface QuestionInputProps {
   mode: SideKickMode;
   onSubmit: (question: string) => void;
+  /** Changes whenever the field should grab focus (opens the system keyboard). */
+  focusToken?: number;
 }
 
 export const QuestionInput: React.FC<QuestionInputProps> = ({
   mode,
   onSubmit,
+  focusToken,
 }) => {
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [askFocused, setAskFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const accent = mode === 'sports' ? theme.colors.sports : theme.colors.primary;
+
+  useEffect(() => {
+    if (focusToken) {
+      inputRef.current?.focus();
+    }
+  }, [focusToken]);
 
   const submit = () => {
     const q = value.trim();

@@ -94,3 +94,10 @@ export interface AskResponse {
   /** True when no model answer was produced; `text` is an error message. */
   failed?: boolean;
 }
+
+/** A proactive note shown unprompted when playback reaches a new scene. */
+export interface SceneInsight {
+  /** When to show it (seconds into the video). */
+  t: number;
+  text: string;
+}

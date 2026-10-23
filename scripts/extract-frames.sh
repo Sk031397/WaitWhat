@@ -15,7 +15,7 @@ set -euo pipefail
 
 BUCKET="${BUCKET:-sidekickvegaos}"
 STEP=2         # must match FRAME_STEP_S in backend/handler.ts
-WIDTH=512
+WIDTH=768      # wide enough to read scoreboards and on-screen text
 FFMPEG="${FFMPEG:-$(command -v ffmpeg || true)}"
 [ -x "$FFMPEG" ] || { echo "ffmpeg not found; set FFMPEG=/path/to/ffmpeg" >&2; exit 1; }
 
@@ -44,7 +44,7 @@ for url in "${VIDEOS[@]}"; do
   mkdir -p "$WORK/raw" "$OUT/$id"
   # One frame per STEP seconds starting at 0; frame N (1-based) is at (N-1)*STEP.
   "$FFMPEG" -loglevel error -y -i "$WORK/video" \
-    -vf "fps=1/$STEP,scale=$WIDTH:-2" -q:v 5 "$WORK/raw/%d.jpg"
+    -vf "fps=1/$STEP,scale=$WIDTH:-2" -q:v 2 "$WORK/raw/%d.jpg"
   for f in "$WORK"/raw/*.jpg; do
     n="$(basename "$f" .jpg)"
     mv "$f" "$OUT/$id/$(( (n - 1) * STEP )).jpg"

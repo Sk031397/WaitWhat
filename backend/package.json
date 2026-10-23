@@ -2,13 +2,14 @@
   "name": "sidekick-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "SideKick /ask endpoint — grounds Amazon Bedrock (Nova) with viewing context and returns 10-foot-friendly answers, with a seeded fallback.",
+  "description": "SideKick /ask endpoint \u2014 grounds Amazon Bedrock (Nova) with viewing context and returns 10-foot-friendly answers, with a seeded fallback.",
   "main": "dist/handler.js",
   "scripts": {
     "build": "tsc",
     "dev": "ts-node devServer.ts",
     "test": "ts-node test.ts",
-    "package": "npm run build && cd dist && zip -r ../sidekick-ask.zip . && cd .. && zip -r sidekick-ask.zip node_modules"
+    "package": "npm run build && cd dist && zip -r ../sidekick-ask.zip . && cd .. && zip -r sidekick-ask.zip node_modules",
+    "insights": "ts-node --transpile-only generateInsights.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.600.0",

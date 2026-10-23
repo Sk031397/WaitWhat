@@ -5,6 +5,7 @@ import {VideoPlayer} from '@sidekick/player/VideoPlayer';
 import {SideKickOverlay} from '@sidekick/sidekick/SideKickOverlay';
 import {PlayerControls} from '@sidekick/components/PlayerControls';
 import {getCatalogItem} from '@sidekick/data/catalog';
+import {warmUp} from '@sidekick/sidekick/bedrockClient';
 import {theme} from '@sidekick/theme';
 
 const CONTROLS_HIDE_MS = 5000;
@@ -39,6 +40,11 @@ const PlayerInner: React.FC<{itemId: string; onBack: () => void}> = ({
       setCurrent(item);
     }
   }, [item, setCurrent]);
+
+  // Wake the backend now so the first question doesn't pay a cold start.
+  useEffect(() => {
+    warmUp();
+  }, []);
 
   // Mode-enter sweep: a brief themed banner announces the mode when the player
   // opens, so the general->sports re-theme is a visible, designed moment.

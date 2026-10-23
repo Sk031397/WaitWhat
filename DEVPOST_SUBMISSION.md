@@ -42,9 +42,9 @@ While a show plays full-screen (playback never stops):
 - **Every question lives on the scrubber** — each ask drops a marker; a "Your
   questions" row lets you jump back to any moment and re-surface its answer.
 - **Sports mode** — open a game and the same gesture re-themes and grounds live
-  Bedrock answers on the game context (teams, venue, situation) so "catch me up"
-  / "what's the score" answer in the moment. Teams/players are fictional over our
-  own license-clear footage.
+  Bedrock answers on the game context and the real frames, so "catch me up"
+  / "break down this play" answer in the moment. No real teams or leagues: the footage is
+  license-clear amateur sports clips.
 - **It sees the screen** — every question carries real frames from the video up
   to your position, so "what's happening right now?" is answered from the
   footage itself (and it can't spoil what's ahead).

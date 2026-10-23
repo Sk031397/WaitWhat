@@ -55,3 +55,18 @@ export const ask = async (req: AskRequest): Promise<AskResponse> => {
 };
 
 const failure = (text: string): AskResponse => ({text, failed: true});
+
+/**
+ * Fire-and-forget ping so a cold Lambda is warm before the first question.
+ * Errors are ignored: a failed warm-up just means the first ask is slower.
+ */
+export const warmUp = (): void => {
+  if (isPlaceholderEndpoint(endpoint)) {
+    return;
+  }
+  fetch(endpoint, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'x-ww-key': ASK_API_KEY},
+    body: JSON.stringify({warmup: true}),
+  }).catch(() => {});
+};

@@ -51,7 +51,7 @@ export const videoIdFor = (url: string): string =>
  */
 export const suggestedPrompts = (mode: SideKickMode): string[] =>
   mode === 'sports'
-    ? ['Catch me up', "What's the score?", "Who's winning?"]
+    ? ['Catch me up', 'What just happened?', 'Break down this play']
     : [
         "What's happening right now?",
         "What's this about?",

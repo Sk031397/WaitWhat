@@ -12,7 +12,7 @@ headline moments:
    revisit any question on the scrubber (Idea — your signature).
 2. **Live Bedrock answer** (real model answer, never canned) — Tech.
 3. **Context-aware sports mode** — open a game and Wait, What? re-themes and
-   answers "catch me up" / "what's the score" grounded on the game (Idea + sports).
+   answers "catch me up" / "break down this play" grounded on the game (Idea + sports).
 4. **It sees the screen** — "what's happening right now?" answered from the real frames (Idea + multi-modal).
 5. **Accessible by design** — answers spoken via VoiceView for low-vision
    viewers; non-blocking, platform-correct (Design/Impact).
@@ -20,8 +20,8 @@ headline moments:
 > NOTE: Wait, What? has two modes from one gesture. **Companion mode** (shows/movies)
 > answers anything, grounded on the real frames. **Sports mode** (a "Live Sports"
 > row of 9 games) re-themes and grounds its live Bedrock answers on the game
-> context (teams, venue, situation). All teams/players are **made-up** (no real
-> leagues/trademarks) over **real, license-clear sports footage** the team hosts
+> context and the real frames. Titles describe what each clip actually shows; there
+> are no real teams or leagues, just **real, license-clear amateur footage** hosted
 > on S3: basketball, football, hockey, soccer, tennis, boxing, wrestling, baseball,
 > and rowing.
 
@@ -73,13 +73,13 @@ Open the panel again and type/say navigation phrases, letting the playhead jump:
 >  apologizes about rewinding, because it actually controls playback."
 
 ### Sports mode (context-aware — for the sports judge)
-Back out, open a **Live Sports** game (e.g. Coastal Kings vs. Summit City —
-basketball, or Ironside vs. Crestfall — baseball). The UI re-themes (green
-accent, SPORTS MODE). Ask **"Catch me up"** or **"What's the score?"** → a live
-Bedrock answer grounded on the game context (teams, venue, situation).
+Back out, open a **Live Sports** game (e.g. Blacktop 1-on-1 — basketball, or
+Five-a-Side — soccer). The UI re-themes (green
+accent, SPORTS MODE). Ask **"Catch me up"** or **"Break down this play"** → a live
+Bedrock answer grounded on what's actually on screen.
 > "On a game, Wait, What? knows it's sports — it re-themes and answers in the
 >  moment, grounded on the game, so I can jump in late and catch up."
-(Teams/players are fictional; the footage is our own license-clear sports clips —
+(No real teams or leagues; the footage is license-clear amateur sports clips —
 nine sports total: basketball, football, hockey, soccer, tennis, boxing, wrestling,
 baseball, and rowing.)
 
@@ -121,8 +121,8 @@ Home, one clean focus sweep.
 - Don't over-explain the voice limitation. Use the text/mic box naturally. In the
   written feedback, be honest: Vega has no app-level STT, so Wait, What? uses the
   platform's system-keyboard mic — the correct, supported path.
-- Don't imply the sports teams/leagues are real — they're invented. If asked,
-  say the footage is your own license-clear clips and the teams are made up.
+- Don't imply the sports teams/leagues are real — there are none. If asked, say
+  the footage is license-clear amateur clips and no score is shown in them.
   Sports mode re-themes and grounds its live Bedrock answers on the game context.
 - Don't show console logs or simulator chrome; crop them out.
 - Don't exceed 3:00. If tight, trim the under-the-hood voiceover first.

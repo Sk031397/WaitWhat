@@ -34,9 +34,9 @@ While a show plays full-screen (playback never stops):
   re-surface its answer** — a navigable Q&A history over the video.
 - **It adapts to sports.** Open a game from the **Live Sports** row and the same
   gesture enters **sports mode**: Wait, What? re-themes and grounds its live Bedrock
-  answers on the game context (teams, venue, situation), so "catch me up" or
-  "what's the score" answer in the moment. Teams/players are fictional (no real
-  leagues/trademarks) over our own license-clear sports footage.
+  answers on the game context and the real frames, so "catch me up" or
+  "break down this play" answer in the moment. No real teams or leagues: the
+  footage is license-clear amateur sports clips.
 - **It sees the screen.** Every question carries real frames from the video up
   to your position, so "what's happening right now?" is answered from the
   footage itself — and it can't spoil what's ahead.

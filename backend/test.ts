@@ -99,6 +99,13 @@ const run = async () => {
   const allowed = await keyed({ body, headers: { 'x-ww-key': 'k' } });
   assert(allowed.statusCode !== 401, 'correct key is accepted');
 
+  // 8. Warm-up ping: answered without touching the model, still behind the key
+  const warmBody = JSON.stringify({ warmup: true });
+  const warm = await keyed({ body: warmBody, headers: { 'x-ww-key': 'k' } });
+  assert(warm.statusCode === 200, 'warm-up ping returns 200');
+  const warmDenied = await keyed({ body: warmBody, headers: {} });
+  assert(warmDenied.statusCode === 401, 'warm-up ping still needs the key');
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 };

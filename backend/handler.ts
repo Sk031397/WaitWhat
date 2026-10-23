@@ -101,6 +101,14 @@ const formatClock = (s: number): string => {
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 };
 
+const isWarmup = (raw: string | undefined): boolean => {
+  try {
+    return JSON.parse(raw ?? '')?.warmup === true;
+  } catch {
+    return false;
+  }
+};
+
 /** Validate + normalize the untrusted request body. */
 const parseRequest = (raw: string | undefined): AskRequest | null => {
   if (!raw) return null;
@@ -175,10 +183,11 @@ const buildSystemPrompt = (req: AskRequest, frameTimes: number[]): string => {
 
   if (req.mode === 'sports') {
     lines.push(
-      'SPORTS MODE: talk like a sharp broadcast analyst. The game situation in ' +
-        'the context describes the state at the start of this clip. For score ' +
-        'questions, repeat only what it says (e.g. a margin, not a full score) ' +
-        'and say it was at the start of this clip.',
+      'SPORTS MODE: talk like a sharp broadcast analyst about the play on ' +
+        'screen (who has the ball or puck, the movement, the technique). For ' +
+        'score or standings questions, use only what the context or a visible ' +
+        'scoreboard shows; if neither shows it, say this clip doesn\'t show ' +
+        'the score and describe the play instead.',
     );
   }
   if (req.navigated) {
@@ -245,6 +254,10 @@ export const handler = async (event: LambdaEvent): Promise<LambdaResult> => {
     const sent = headers['x-ww-key'] ?? headers['X-Ww-Key'];
     if (sent !== API_KEY) return json(401, { error: 'Unauthorized' });
   }
+
+  // The app pings this when the player opens so a cold Lambda is already warm
+  // (handler loaded, clients built) by the time the first real question lands.
+  if (isWarmup(event.body)) return json(200, { warm: true });
 
   const req = parseRequest(event.body);
   if (!req) return json(400, { error: 'Invalid request body' });

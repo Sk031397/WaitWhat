@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,14 @@ import {
   Platform,
   AccessibilityInfo,
 } from 'react-native';
-import {AskTurn, SideKickAnswer} from '@sidekick/data/types';
+import {HWEvent, useTVEventHandler} from '@amazon-devices/react-native-kepler';
+import {AskTurn, SceneInsight, SideKickAnswer} from '@sidekick/data/types';
+import {INSIGHTS} from '@sidekick/data/insights';
 import {theme} from '@sidekick/theme';
 import {useVideoContext} from '@sidekick/player/useVideoContext';
 import {QuestionInput} from './QuestionInput';
-import {buildAskRequest, suggestedPrompts} from './ModeRouter';
+import {buildAskRequest, suggestedPrompts, videoIdFor} from './ModeRouter';
+import {dueInsight} from './insights';
 import {ask} from './bedrockClient';
 import {formatTime} from '@sidekick/util/formatTime';
 import {
@@ -25,6 +28,12 @@ import {useTypewriter} from '@sidekick/util/useTypewriter';
 
 /** How many prior exchanges to send with a question. */
 const MAX_HISTORY_TURNS = 3;
+/** Hold Menu this long to open the panel with the keyboard (and its mic) up. */
+const LONG_PRESS_MS = 600;
+/** Wait for the panel's slide-in before focusing, so the keyboard lands on it. */
+const FOCUS_DELAY_MS = 320;
+/** How long a proactive scene insight stays up. */
+const INSIGHT_SHOW_MS = 6000;
 
 /**
  * SideKickOverlay — a SLIDE-OUT companion panel.
@@ -46,10 +55,13 @@ export const SideKickOverlay: React.FC = () => {
     resurface,
     requestSeek,
     durationSeconds,
+    current,
+    positionSeconds,
   } = useVideoContext();
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
+  const [focusToken, setFocusToken] = useState(0);
   // Last few live exchanges for the current title, so "who's he?" has context.
   const history = useRef<{itemId: string; turns: AskTurn[]}>({
     itemId: '',
@@ -78,6 +90,105 @@ export const SideKickOverlay: React.FC = () => {
       }).start();
     }
   }, [open, translateX]);
+
+  // ----- Hold Menu to ask -----
+  // Vega has no app-level speech API, so this is as close to "one button" as
+  // the platform allows: hold Menu and the panel opens with the question field
+  // focused, which brings up the system keyboard and its mic. A short Menu
+  // press just toggles the panel. (Select is avoided: holding it would also
+  // press whatever control has focus.)
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdFired = useRef(false);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openForQuestion = useCallback(() => {
+    setOpen(true);
+    if (focusTimer.current) {
+      clearTimeout(focusTimer.current);
+    }
+    focusTimer.current = setTimeout(
+      () => setFocusToken((t) => t + 1),
+      FOCUS_DELAY_MS,
+    );
+  }, []);
+  const onRemoteKey = useCallback(
+    (evt: HWEvent) => {
+      if (evt.eventType !== 'menu') {
+        return;
+      }
+      if (evt.eventKeyAction === 0) {
+        // Key repeats while held send more key-downs; only the first counts.
+        if (holdTimer.current) {
+          return;
+        }
+        holdFired.current = false;
+        holdTimer.current = setTimeout(() => {
+          holdFired.current = true;
+          openForQuestion();
+        }, LONG_PRESS_MS);
+      } else if (evt.eventKeyAction === 1) {
+        if (holdTimer.current) {
+          clearTimeout(holdTimer.current);
+          holdTimer.current = null;
+        }
+        if (!holdFired.current) {
+          setOpen((o) => !o);
+        }
+      }
+    },
+    [openForQuestion],
+  );
+  useTVEventHandler(onRemoteKey);
+  useEffect(
+    () => () => {
+      if (holdTimer.current) {
+        clearTimeout(holdTimer.current);
+      }
+      if (focusTimer.current) {
+        clearTimeout(focusTimer.current);
+      }
+    },
+    [],
+  );
+
+  // ----- Proactive scene insights -----
+  // Pre-generated per video (backend/generateInsights.ts). When playback
+  // reaches a new scene, a small card surfaces what's on screen, unasked.
+  // Skipped while the panel is open so it never talks over an answer.
+  const insights = useMemo(
+    () => (current ? INSIGHTS[videoIdFor(current.videoUrl)] ?? [] : []),
+    [current],
+  );
+  const [insight, setInsight] = useState<SceneInsight | null>(null);
+  const insightAnim = useRef(new Animated.Value(0)).current;
+  const prevPosition = useRef(0);
+  useEffect(() => {
+    const hit = dueInsight(insights, prevPosition.current, positionSeconds);
+    prevPosition.current = positionSeconds;
+    if (!hit || open) {
+      return;
+    }
+    setInsight(hit);
+    AccessibilityInfo.announceForAccessibility?.(`Scene insight: ${hit.text}`);
+    insightAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(insightAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(INSIGHT_SHOW_MS),
+      Animated.timing(insightAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [positionSeconds, insights, open, insightAnim]);
+  useEffect(() => {
+    if (open) {
+      insightAnim.setValue(0);
+    }
+  }, [open, insightAnim]);
 
   // ----- Signature mode-switch animation -----
   // modeAnim: 0 = general, 1 = sports. Drives an interpolated accent color and
@@ -302,12 +413,38 @@ export const SideKickOverlay: React.FC = () => {
 
   return (
     <View style={styles.root} pointerEvents="box-none">
+      {/* ---- Proactive scene insight (unprompted, non-focusable) ---- */}
+      {insight && !open ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.insight,
+            {
+              borderColor: accent,
+              opacity: insightAnim,
+              transform: [
+                {
+                  translateY: insightAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-theme.spacing.sm, 0],
+                  }),
+                },
+              ],
+            },
+          ]}>
+          <Text style={[styles.insightLabel, {color: accent}]}>
+            ✨ SCENE INSIGHT
+          </Text>
+          <Text style={styles.insightText}>{insight.text}</Text>
+        </Animated.View>
+      ) : null}
+
       {/* ---- Floating trigger tab (right edge) ---- */}
       {!open ? (
         <Pressable
           hasTVPreferredFocus
           accessibilityRole="button"
-          accessibilityLabel="Open SideKick. Ask about what you're watching without pausing."
+          accessibilityLabel="Open Wait, What? Ask about what you're watching without pausing. Tip: hold the Menu button to ask from anywhere."
           onPress={() => setOpen(true)}
           onFocus={() => setTabFocused(true)}
           onBlur={() => setTabFocused(false)}
@@ -317,7 +454,10 @@ export const SideKickOverlay: React.FC = () => {
             tabFocused && styles.tabFocused,
           ]}>
           <View style={[styles.tabDot, {backgroundColor: accent}]} />
-          <Text style={styles.tabText}>Ask Wait, What?</Text>
+          <View>
+            <Text style={styles.tabText}>Ask Wait, What?</Text>
+            <Text style={styles.tabHint}>or hold ☰</Text>
+          </View>
         </Pressable>
       ) : null}
 
@@ -428,7 +568,11 @@ export const SideKickOverlay: React.FC = () => {
         </View>
 
         {/* Real voice/text entry (system keyboard mic = Vega STT) */}
-        <QuestionInput mode={mode} onSubmit={handleSubmit} />
+        <QuestionInput
+          mode={mode}
+          onSubmit={handleSubmit}
+          focusToken={focusToken}
+        />
 
         {/* Embeddability note — SideKick is a layer any streaming app can add */}
         <Text style={styles.embedNote}>
@@ -467,6 +611,32 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     fontSize: theme.font.body,
     fontWeight: '700',
+  },
+  insight: {
+    position: 'absolute',
+    top: theme.safeZones.vertical + theme.spacing.xl,
+    end: theme.safeZones.horizontal,
+    maxWidth: theme.overlayWidth,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  insightLabel: {
+    fontSize: theme.font.caption,
+    fontWeight: theme.weight.black,
+    letterSpacing: theme.tracking.wide,
+    marginBottom: theme.spacing.xs,
+  },
+  insightText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.font.body,
+    lineHeight: theme.font.body * 1.3,
+  },
+  tabHint: {
+    color: theme.colors.textMuted,
+    fontSize: theme.font.caption,
   },
 
   panel: {

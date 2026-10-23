@@ -122,4 +122,4 @@ earlier one — it jumps back and re-shows that answer.
 - If a take fumbles, keep rolling and redo the line; edit later. Clean takes of
   the **navigation** and **CV** beats matter most.
 - Do NOT show console logs or simulator chrome — crop the capture to the VD screen.
-- Keep teams/players framed as fictional; footage is your own license-clear clips.
+- Don't name teams or ask for a score: the clips are license-clear amateur footage with no scoreboard.
