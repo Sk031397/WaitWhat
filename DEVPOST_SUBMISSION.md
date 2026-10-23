@@ -126,9 +126,8 @@ AWS Builder
 - Demo video (YouTube/Vimeo, public, <3:00): [ PASTE VIDEO URL ]
 
 ## Testing instructions (judges only — NOT in the public repo)
-Build per the README. To use the live backend, create `src/secrets.ts` with:
-`export const ASK_API_KEY = '[ PASTE KEY FROM YOUR LOCAL src/secrets.ts ]';`
-then rebuild. Endpoint: the `ASK_ENDPOINT` in `src/config.ts`.
+Clone and follow the README Quick start; no keys or config needed. The app talks
+to the live backend at the `ASK_ENDPOINT` in `src/config.ts`.
 
 ## New or existing project?
 New: created during the submission window (first commit Oct 9, 2026).

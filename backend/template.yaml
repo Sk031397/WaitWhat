@@ -16,10 +16,6 @@ Parameters:
     Type: String
     Default: sidekickvegaos
     Description: Bucket holding frames/<videoId>/<second>.jpg (scripts/extract-frames.sh).
-  AskApiKey:
-    Type: String
-    NoEcho: true
-    Description: Shared key the app sends in x-ww-key (must match src/secrets.ts).
 
 Globals:
   Function:
@@ -38,7 +34,7 @@ Resources:
       CorsConfiguration:
         AllowOrigins: ['*']
         AllowMethods: ['POST', 'OPTIONS']
-        AllowHeaders: ['content-type', 'x-ww-key']
+        AllowHeaders: ['content-type']
 
   AskFunction:
     Type: AWS::Serverless::Function
@@ -50,7 +46,6 @@ Resources:
       Environment:
         Variables:
           BEDROCK_MODEL_ID: !Ref BedrockModelId
-          ASK_API_KEY: !Ref AskApiKey
           MEDIA_BUCKET: !Ref MediaBucket
       Events:
         Ask:

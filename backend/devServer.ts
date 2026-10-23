@@ -16,7 +16,7 @@ const server = http.createServer((reqHttp, res) => {
   if (reqHttp.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, x-ww-key',
+      'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
     });
     res.end();

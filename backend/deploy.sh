@@ -3,9 +3,9 @@
 #
 #   cd backend && ./deploy.sh
 #
-# Builds a prod-only zip, updates the function code + env (ASK_API_KEY is read
-# from src/secrets.ts so app and backend always match), throttles the API stage,
-# and caps Lambda concurrency.
+# Builds a prod-only zip, updates the function code + env, throttles the API
+# stage, and caps Lambda concurrency. The endpoint is public (no key): the
+# throttle and concurrency cap are the cost guard.
 #
 # Rollback: version 1 of sidekick-ask is a published snapshot of the pre-fix
 # code. Restore it with:
@@ -21,7 +21,6 @@ REGION=us-east-1
 MODEL=us.amazon.nova-lite-v1:0   # multimodal: reads the video frames
 BUCKET=sidekickvegaos
 HERE="$(cd "$(dirname "$0")" && pwd)"
-KEY="$(grep -oP "ASK_API_KEY = '\K[^']+" "$HERE/../src/secrets.ts")"
 STAGE="$(mktemp -d)"
 ZIP="$STAGE.zip"
 
@@ -38,7 +37,7 @@ aws lambda wait function-updated --function-name "$FN" --region "$REGION"
 
 echo "Updating env..."
 aws lambda update-function-configuration --function-name "$FN" --region "$REGION" \
-  --environment "Variables={BEDROCK_MODEL_ID=$MODEL,ASK_API_KEY=$KEY,MEDIA_BUCKET=$BUCKET}" \
+  --environment "Variables={BEDROCK_MODEL_ID=$MODEL,MEDIA_BUCKET=$BUCKET}" \
   --query LastUpdateStatus --output text
 aws lambda wait function-updated --function-name "$FN" --region "$REGION"
 
@@ -54,8 +53,7 @@ aws lambda put-function-concurrency --function-name "$FN" --region "$REGION" \
 echo "Smoke test..."
 URL="https://$API_ID.execute-api.$REGION.amazonaws.com/ask"
 BODY='{"mode":"general","question":"What is happening right now?","content":{"title":"Tears of Steel","contentType":"movie","synopsis":"A sci-fi short set in a future Amsterdam.","positionSeconds":30,"videoId":"tears-of-steel"}}'
-echo -n "  no key   -> "; curl -s -o /dev/null -w '%{http_code}\n' -X POST "$URL" -H 'Content-Type: application/json' -d "$BODY"
-echo -n "  with key -> "; curl -s -X POST "$URL" -H 'Content-Type: application/json' -H "x-ww-key: $KEY" -d "$BODY"; echo
+echo -n "  -> "; curl -s -X POST "$URL" -H 'Content-Type: application/json' -d "$BODY"; echo
 
 rm -rf "$STAGE" "$ZIP"
-echo "Done. Rebuild + reinstall the TV app so it sends the key."
+echo "Done."

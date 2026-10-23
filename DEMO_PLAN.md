@@ -34,8 +34,7 @@ headline moments:
       placeholders in `src/data/catalog.ts` → `MEDIA`. Swap in real art (biggest
       visual-quality lever). If you change any video, rerun
       `scripts/extract-frames.sh` and `cd backend && npm run insights`, then rebuild.
-- [ ] Live backend confirmed: `curl` the endpoint and verify it returns `{"text": ...}`
-      (with the `x-ww-key` header from `src/secrets.ts`).
+- [ ] Live backend confirmed: `curl` the endpoint and verify it returns `{"text": ...}`.
       (Live on Amazon Bedrock Nova Lite via API Gateway + Lambda; `ASK_ENDPOINT`
       is already wired in `src/config.ts`.)
 - [ ] `npm run build:debug` then `vega run-app build/x86_64-debug/sidekick_x86_64.vpkg`
@@ -137,7 +136,7 @@ Home, one clean focus sweep.
 - **Video black?** Almost always the clip/codec, not the app — point that item's
   `video` in `MEDIA` at the known-good Sintel URL and rebuild.
 - **Answer says "Couldn't reach Wait, What?"?** The backend/network hiccuped.
-  Re-try; if persistent, check the key in `src/secrets.ts` matches the Lambda.
+  Re-try; if persistent, check the Lambda's CloudWatch logs.
 - **Hold Menu didn't open the panel?** Select the **Ask Wait, What?** tab instead
   (it says "or hold ☰"); the rest of the flow is identical.
 - **No insight card?** It only fires during normal playback (not after a seek past

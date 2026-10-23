@@ -24,11 +24,7 @@ cd WaitWhat
 source $HOME/vega/env          # load the Vega SDK (every new terminal)
 npm install
 
-# 2. Add the backend key (judges: the key is in the Devpost testing instructions)
-cp src/secrets.example.ts src/secrets.ts
-#    then edit src/secrets.ts and set ASK_API_KEY
-
-# 3. Start the Virtual Device (with a window), build, install and launch
+# 2. Start the Virtual Device (with a window), build, install and launch
 vega virtual-device start --gui
 npm run build:debug
 vega run-app build/x86_64-debug/sidekick_x86_64.vpkg
@@ -40,7 +36,7 @@ now?"* or *"Take me to the middle and tell me what's happening"*. Then open a ga
 from the **Sports** row and ask *"Break down this play"*.
 
 The app talks to an already-deployed backend (`ASK_ENDPOINT` in `src/config.ts`),
-so you don't need AWS to run it. To deploy your own backend, see
+so you don't need AWS credentials, keys or any config to run it. To deploy your own backend, see
 [Backend](#2-backend-the-bedrock-endpoint). Tests: `npm test` (app) and
 `cd backend && npm test`.
 
@@ -93,7 +89,7 @@ flowchart TB
     Router -- "pure control<br/>'go to the middle'" --> Player["VideoPlayer<br/>W3C media, never paused"]
     Router -- question --> Snap["VideoContext.snapshot()<br/>title, synopsis, position, videoId"]
     Snap --> Build["buildAskRequest()<br/>+ last 3 exchanges"]
-    Build --> Client["bedrockClient.ask()<br/>11s timeout, x-ww-key"]
+    Build --> Client["bedrockClient.ask()<br/>11s timeout"]
     Client --> Overlay["SideKickOverlay<br/>answer + timeline marker"]
     Overlay --> VoiceView["VoiceView<br/>announces answer"]
     Player -- position --> Insights["insights.ts<br/>scene insight due?"]
@@ -156,8 +152,7 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 ├── src/
 │   ├── App.tsx                # stack navigator: Home → Player (no drawer)
 │   ├── index.js               # AppRegistry.registerComponent(appName, …) from app.json
-│   ├── config.ts              # ASK_ENDPOINT (deployed backend URL); re-exports the key
-│   ├── secrets.example.ts     # copy to secrets.ts (gitignored) and set ASK_API_KEY
+│   ├── config.ts              # ASK_ENDPOINT (deployed backend URL)
 │   ├── screens/
 │   │   ├── HomeScreen.tsx      # hero header + horizontal content rows
 │   │   └── PlayerScreen.tsx    # full-screen video + controls + overlay
@@ -208,7 +203,6 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 source $HOME/vega/env
 
 npm install
-cp src/secrets.example.ts src/secrets.ts   # then set ASK_API_KEY (see Backend below)
 
 npm test        # Jest unit tests
 npm run lint
@@ -277,15 +271,9 @@ Then point the app at the endpoint — in `src/config.ts` set `ASK_ENDPOINT`, or
 call `setAskEndpoint('https://…/ask')` at startup. (A live API Gateway endpoint
 is already wired in `src/config.ts` for this submission.)
 
-The shared `x-ww-key` lives in `src/secrets.ts`, which is gitignored: copy
-`src/secrets.example.ts` to `src/secrets.ts` and set `ASK_API_KEY` to the same
-value the Lambda uses (`backend/deploy.sh` reads it from there).
-
-> **Judges:** the key for the live endpoint is in the Devpost submission's
-> testing instructions (kept out of this public repo). Put it in
-> `src/secrets.ts`, rebuild, and the app talks to the deployed backend. Without
-> it the app runs but shows "Couldn't reach Wait, What?" instead of answers. Or
-> deploy your own backend with the steps above.
+The endpoint needs no key: anything shipped inside a TV app can be extracted,
+so instead the API stage is throttled (5 req/s, burst 10) and the Lambda's
+concurrency is capped, which bounds Bedrock cost.
 
 ### Bedrock access
 Enable model access for an **Amazon Nova** model in your region
@@ -360,8 +348,8 @@ plain companion app would miss:
   Lambda instead — documented in the build history.)
 - **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on Nova
   models + inference profiles, and `s3:GetObject` on the media bucket.
-- **Cost guards** — API Gateway throttling (5 req/s, burst 10) and a shared
-  `x-ww-key` header. (`deploy.sh` also tries to reserve Lambda concurrency, but
+- **Cost guards** — API Gateway throttling (5 req/s, burst 10); the endpoint
+  needs no key, so the app runs straight from a clone. (`deploy.sh` also tries to reserve Lambda concurrency, but
   this account's concurrency limit is too low to allow it, so throttling is the
   cap.)
 - **Bedrock, offline** — `backend/generateInsights.ts` sends frames at each

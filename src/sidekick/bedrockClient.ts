@@ -1,9 +1,5 @@
 import {AskRequest, AskResponse} from '@sidekick/data/types';
-import {
-  ASK_API_KEY,
-  ASK_ENDPOINT,
-  isPlaceholderEndpoint,
-} from '@sidekick/config';
+import {ASK_ENDPOINT, isPlaceholderEndpoint} from '@sidekick/config';
 
 /**
  * bedrockClient — talks to the SideKick backend `/ask` endpoint, which runs
@@ -33,7 +29,7 @@ export const ask = async (req: AskRequest): Promise<AskResponse> => {
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'x-ww-key': ASK_API_KEY},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(req),
       signal: controller.signal,
     });
@@ -66,7 +62,7 @@ export const warmUp = (): void => {
   }
   fetch(endpoint, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'x-ww-key': ASK_API_KEY},
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({warmup: true}),
   }).catch(() => {});
 };

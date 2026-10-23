@@ -32,4 +32,5 @@ npm-debug.log*
 samconfig.toml
 frames-out/
 buildinfo.json
+# Old local key file (no longer used)
 src/secrets.ts

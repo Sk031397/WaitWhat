@@ -29,9 +29,6 @@ const MAX_TEXT_LEN = 1000;
 const MAX_CONTEXT_KEYS = 12;
 const MAX_MOMENTS = 20;
 const MAX_HISTORY_TURNS = 3;
-// Shared key the app sends in `x-ww-key`. It ships in the app, so it only
-// keeps out casual scanners; API Gateway throttling is the real cost guard.
-const API_KEY = process.env.ASK_API_KEY ?? '';
 // The app gives up after 11s, so Bedrock must answer (or fail) well before
 // that. One retry, inside the same budget.
 const BEDROCK_TIMEOUT_MS = 8000;
@@ -69,7 +66,7 @@ const json = (statusCode: number, payload: unknown): LambdaResult => ({
   headers: {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, x-ww-key',
+    'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   },
   body: JSON.stringify(payload),
@@ -249,11 +246,6 @@ const loadFrames = async (
 
 export const handler = async (event: LambdaEvent): Promise<LambdaResult> => {
   if (event.requestContext?.http?.method === 'OPTIONS') return json(204, '');
-  if (API_KEY) {
-    const headers = event.headers ?? {};
-    const sent = headers['x-ww-key'] ?? headers['X-Ww-Key'];
-    if (sent !== API_KEY) return json(401, { error: 'Unauthorized' });
-  }
 
   // The app pings this when the player opens so a cold Lambda is already warm
   // (handler loaded, clients built) by the time the first real question lands.
