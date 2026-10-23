@@ -18,7 +18,7 @@ headline moments:
    viewers; non-blocking, platform-correct (Design/Impact).
 
 > NOTE: Wait, What? has two modes from one gesture. **Companion mode** (shows/movies)
-> answers anything, grounded on the real frames. **Sports mode** (a "Live Sports"
+> answers anything, grounded on the real frames. **Sports mode** (a "Sports"
 > row of 9 games) re-themes and grounds its live Bedrock answers on the game
 > context and the real frames. Titles describe what each clip actually shows; there
 > are no real teams or leagues, just **real, license-clear amateur footage** hosted
@@ -73,7 +73,7 @@ Open the panel again and type/say navigation phrases, letting the playhead jump:
 >  apologizes about rewinding, because it actually controls playback."
 
 ### Sports mode (context-aware — for the sports judge)
-Back out, open a **Live Sports** game (e.g. Blacktop 1-on-1 — basketball, or
+Back out, open a **Sports** game (e.g. Blacktop 1-on-1 — basketball, or
 Five-a-Side — soccer). The UI re-themes (green
 accent, SPORTS MODE). Ask **"Catch me up"** or **"Break down this play"** → a live
 Bedrock answer grounded on what's actually on screen.

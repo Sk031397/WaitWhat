@@ -61,7 +61,7 @@ the playhead jump each time.
 
 ## 1:30–2:00 · SPORTS MODE  (≈50 words)
 
-`[ACTION]` Back out. Open a **Live Sports** game. UI re-themes green / "SPORTS
+`[ACTION]` Back out. Open a **Sports** game. UI re-themes green / "SPORTS
 MODE". Ask **"Catch me up."** Live answer grounded on the game.
 
 > "Open a game and the same gesture becomes a **sports companion** — it

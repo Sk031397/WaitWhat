@@ -23,7 +23,7 @@ export interface CatalogItem {
   headerImage?: string;
   genres?: string[];
   releaseYear?: number;
-  /** Display rating, e.g. "8.7" or "LIVE". */
+  /** Display rating, e.g. "8.7" or "SPORTS". */
   rating?: string;
 }
 

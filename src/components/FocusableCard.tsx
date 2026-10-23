@@ -58,7 +58,9 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
         accessibilityRole="button"
         accessibilityLabel={`${item.title}${
           item.genres ? `, ${item.genres.join(', ')}` : ''
-        }${item.rating ? `, rated ${item.rating}` : ''}. Press to play.`}
+        }${
+          item.rating && !isSports ? `, rated ${item.rating}` : ''
+        }. Press to play.`}
         onPress={onPress}
         onFocus={() => {
           setFocused(true);
@@ -76,7 +78,7 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
           <View style={styles.placeholder} />
         )}
 
-        {/* Rating / LIVE pill */}
+        {/* Rating / SPORTS pill */}
         {item.rating ? (
           <View style={[styles.pill, isSports && styles.pillSports]}>
             <Text style={styles.pillText}>{item.rating}</Text>

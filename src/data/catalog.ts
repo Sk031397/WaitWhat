@@ -132,12 +132,12 @@ const m = (id: string): Media =>
  * of them (actors, plot, background) in companion mode.
  */
 export const CATALOG: CatalogItem[] = [
-  // ----- Row: Live Sports — titles and context describe what each clip actually
+  // ----- Row: Sports — titles and context describe what each clip actually
   // shows (amateur/pickup footage, no real teams, no scoreboard, so no scores). -----
   {
     id: 'game01',
     title: 'Blacktop 1-on-1 — Drive to the Hoop',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game01').video,
     thumbnail: m('game01').thumbnail,
@@ -146,7 +146,7 @@ export const CATALOG: CatalogItem[] = [
       "Drone's-eye view of a sunny outdoor concrete court: two young players go one-on-one at the top of the key, then the ball handler drives to the rim.",
     genres: ['Basketball', 'Pickup'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       format: '1-on-1 pickup game',
       setting: 'Outdoor concrete court on a sunny afternoon',
@@ -158,7 +158,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game02',
     title: 'Gold & White vs. Green — Pileup at the 30',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game02').video,
     thumbnail: m('game02').thumbnail,
@@ -167,7 +167,7 @@ export const CATALOG: CatalogItem[] = [
       'An amateur football game on a sunny grass field: a play develops between the 40- and 30-yard lines and ends in a pileup around the 30 as the referee signals.',
     genres: ['Football', 'Amateur'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       teams:
         'White jerseys with gold trim vs. green-and-gold jerseys (fictional, unnamed)',
@@ -178,7 +178,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game03',
     title: 'Rink Scrimmage — White vs. Black',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game03').video,
     thumbnail: m('game03').thumbnail,
@@ -187,7 +187,7 @@ export const CATALOG: CatalogItem[] = [
       'Pickup hockey at an indoor rink: skaters in white and black jerseys battle for the puck along the boards, then a black-jersey skater carries it in toward the net.',
     genres: ['Hockey', 'Scrimmage'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       teams: 'White jerseys with light-blue pants vs. black jerseys',
       setting: 'Indoor rink, practice-style scrimmage, no crowd',
@@ -197,7 +197,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game04',
     title: 'Five-a-Side — Maroon Breaks for Goal',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game04').video,
     thumbnail: m('game04').thumbnail,
@@ -206,7 +206,7 @@ export const CATALOG: CatalogItem[] = [
       'A small-sided game on an outdoor turf pitch: a player in maroon carries the ball past a defender in a blue bib and drives a shot toward goal.',
     genres: ['Soccer', 'Small-sided'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       teams: 'Maroon shirts vs. light-blue training bibs',
       setting: 'Fenced artificial-turf pitch, overcast day',
@@ -216,7 +216,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game05',
     title: 'Baseline Rally — Overhead Court Cam',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game05').video,
     thumbnail: m('game05').thumbnail,
@@ -225,7 +225,7 @@ export const CATALOG: CatalogItem[] = [
       'Straight-down drone view of a blue hard court: two singles players trade groundstrokes from the baselines as the net casts a long afternoon shadow.',
     genres: ['Tennis', 'Singles'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       players:
         'One player in white (left baseline), one in red (right baseline)',
@@ -236,7 +236,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game06',
     title: 'Ring Bout — Blue Gloves vs. Red Gloves',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game06').video,
     thumbnail: m('game06').thumbnail,
@@ -245,7 +245,7 @@ export const CATALOG: CatalogItem[] = [
       'Close-up inside the ropes: a fighter in blue gloves works his jab against a guarded opponent in red gloves, then they close in and trade at short range.',
     genres: ['Boxing', 'Bout'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       fighters:
         'Blue gloves and blue trunks vs. red-and-gold gloves with a script tattoo down his spine',
@@ -256,7 +256,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game07',
     title: 'Lucha Libre — Masked Tag-Team Clash',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game07').video,
     thumbnail: m('game07').thumbnail,
@@ -265,7 +265,7 @@ export const CATALOG: CatalogItem[] = [
       'A packed lucha libre arena: a masked wrestler in red pants takes his opponent to the mat as the referee waves, while a gold-masked partner waits on the apron.',
     genres: ['Wrestling', 'Lucha Libre'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       format: 'Tag-team lucha libre match',
       setting: 'Arena with a big crowd and video screens',
@@ -275,7 +275,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game08',
     title: 'Sandlot Baseball — At-Bat Under the Palms',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game08').video,
     thumbnail: m('game08').thumbnail,
@@ -284,7 +284,7 @@ export const CATALOG: CatalogItem[] = [
       'Behind-the-plate view at a dusty, palm-lined diamond: a batter in blue swings, then the catcher in black stands and watches the play unfold in the field.',
     genres: ['Baseball', 'Amateur'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       teams: 'Blue jerseys (batting) vs. black-and-grey uniforms (fielding)',
       setting: 'Dirt infield, palm trees, sunny tropical day',
@@ -294,7 +294,7 @@ export const CATALOG: CatalogItem[] = [
   {
     id: 'game09',
     title: 'Rowing — Three Crews on the Lake',
-    row: 'Live Sports',
+    row: 'Sports',
     contentType: 'sports',
     videoUrl: m('game09').video,
     thumbnail: m('game09').thumbnail,
@@ -303,7 +303,7 @@ export const CATALOG: CatalogItem[] = [
       "Drone shot over calm, sunny water: three rowing crews pull in parallel past a waterfront town while a coach's launch motors alongside.",
     genres: ['Rowing', 'Training'],
     releaseYear: 2026,
-    rating: 'LIVE',
+    rating: 'SPORTS',
     context: {
       crews: 'Three boats in parallel lanes; the nearest is a four',
       setting: 'Wide lake or river beside a waterfront town, summer day',

@@ -167,7 +167,7 @@ source $HOME/vega/env && npm run build:debug
 > The demo browses shows/movies on the home grid; open any title to watch.
 > Open the **Ask Wait, What?** panel, then type or (on a device) hold the Alexa
 > button to dictate a question. Try a navigation phrase like *"go to the middle"*
-> or *"take me to 0:10 and tell me what's happening."* Open a **Live Sports** game to see sports mode:
+> or *"take me to 0:10 and tell me what's happening."* Open a **Sports** game to see sports mode:
 > Wait, What? re-themes and answers "catch me up" / "what just happened?" grounded on
 > what's on screen (license-clear amateur footage, no real teams).
 

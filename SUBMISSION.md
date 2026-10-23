@@ -32,7 +32,7 @@ While a show plays full-screen (playback never stops):
 - **Every question lives on the scrubber.** Each ask drops a marker at that
   timestamp; a "Your questions" row lets you **jump back to any moment and
   re-surface its answer** — a navigable Q&A history over the video.
-- **It adapts to sports.** Open a game from the **Live Sports** row and the same
+- **It adapts to sports.** Open a game from the **Sports** row and the same
   gesture enters **sports mode**: Wait, What? re-themes and grounds its live Bedrock
   answers on the game context and the real frames, so "catch me up" or
   "break down this play" answer in the moment. No real teams or leagues: the
