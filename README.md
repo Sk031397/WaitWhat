@@ -99,7 +99,7 @@ flowchart TB
 
   subgraph AWS["AWS (us-east-1)"]
     direction LR
-    APIGW["API Gateway HTTP API<br/>POST /ask, throttled 5 req/s"] --> Lambda["Lambda: handler.ts<br/>validate, check key"]
+    APIGW["API Gateway HTTP API<br/>POST /ask, throttled 5 req/s"] --> Lambda["Lambda: handler.ts<br/>validate request"]
     Lambda -- "last 4 frames ≤ position" --> S3[("S3: frames/videoId/sec.jpg<br/>+ sports clips")]
     Lambda -- "Converse: prompt + images" --> Bedrock["Amazon Bedrock<br/>Nova Lite"]
   end
@@ -122,7 +122,7 @@ flowchart TB
 **How a question flows:** the viewer holds Menu (☰) and asks. Pure seek commands
 ("go to the middle") are handled on the TV with no network call. Everything else
 becomes a grounded request (title, synopsis, playback position, video id, recent
-exchanges) sent to API Gateway. The Lambda checks the shared key, loads the last
+exchanges) sent to API Gateway. The Lambda validates the request, loads the last
 four frames at or before the position from S3, and sends them with the question to
 Nova Lite. The answer appears in the side panel, drops a marker on the timeline and
 is announced by VoiceView, while the video keeps playing. Scene insights are
