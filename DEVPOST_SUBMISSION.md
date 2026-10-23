@@ -243,20 +243,45 @@ New: created during the submission window (first commit Oct 9, 2026).
 - **Mermaid** — GitHub renders the architecture diagram straight from the README.
 - **Claude Code** — sped up refactors, docs and deployment scripting.
 
-**3) What needs work?** (summary — full detail in the friction log below)
-- **No app-level speech-to-text** and **no app-level TTS** — the two biggest gaps
-  for voice-first TV apps; we used the system-keyboard mic and VoiceView.
-- **No video-frame-capture API** on Vega — we extract frames server-side instead.
-- No long-press event for remote keys unless a control is focused — we time
-  Menu's key-down/key-up ourselves.
-- `react-native-video` fails on Vega with no hint toward W3C media; setting `src`
-  without `load()` black-screens silently; surface-view lifecycle churn can crash
-  the media stack with only a native abort.
-- `linear-gradient`, `kepler-ui-components`, `react-native-screens` aren't in the
-  OS 1.2 profile; the VD stops on idle and some H.264 MP4s won't decode.
-- Public Lambda Function URLs returned 403 with no named control (used API
-  Gateway); Claude required an AWS Marketplace subscription that wasn't surfaced
-  before access looked "granted" (used Nova).
+**3) What needs work?** (full detail in the friction log)
+
+*Fire TV / Vega OS*
+- **Vega CLI / template** — hand-written manifests fail on OS-version/module
+  entries without pointing to `vega project update-manifest`;
+  `linear-gradient`, `kepler-ui-components` and `react-native-screens` aren't in
+  the OS 1.2 profile, which you only learn at install time. The template's Jest
+  and ESLint configs point at a `test/` folder it doesn't create, so `npm test`
+  and `npm run lint` fail out of the box.
+- **Vega Virtual Device** — stops after idle; some H.264 MP4s sit black with
+  `KeplerMediaSink: Invalid configuration` without naming the codec;
+  `screenshooter` / `gwsi-tool-screenshooter` wrote 0-byte PNGs; `journalctl` is
+  unsupported in the dev shell (use `loggingctl`).
+- **React Native for Vega** — no global long-press event: `longSelect` only
+  reaches a focused `Pressable`, so a "hold Menu" gesture must be timed from
+  key-down/key-up. `useTVEventHandler` isn't in the stock RN 0.72 types; it must be
+  imported from `@amazon-devices/react-native-kepler`.
+- **react-native-w3cmedia** — `react-native-video` fails with no hint to use W3C
+  media; setting `src` without `load()` black-screens silently; surface-view
+  churn mid-load crashes the runtime with a native abort and no JS stack.
+- **Voice** — no app-level speech-to-text API; the system keyboard mic is the
+  only path, so true push-to-talk isn't possible.
+- **VoiceView** — no app-level text-to-speech; answers are only spoken if the user
+  has turned VoiceView on.
+- **No frame-capture API** — apps can't read the current video frame, so vision
+  only works on content pre-processed server-side.
+
+*AWS*
+- **Amazon Bedrock** — Claude was blocked by an AWS Marketplace billing step not
+  shown before access looked "granted". Nova Lite misreads tiny, fast objects
+  (a ball a few pixels wide) and guessed passes and misses, so sports insights
+  had to be hand-checked. A long batch job hit `ERR_HTTP2_STREAM_CANCEL` after
+  the client sat idle and needed retries.
+- **AWS Lambda** — public Function URLs returned a generic 403 with no named
+  control; reserved concurrency was rejected because the new account's
+  concurrency quota is too low, with no pointer to the quota increase.
+- **AWS IAM** — invoking Marketplace-backed models from a role needs
+  `aws-marketplace:*` actions that aren't documented alongside Bedrock.
+- **AWS CLI** — session expiry mid-deploy (minor).
 
 **4) How was onboarding (zero to hello world)?**
 Good once we used the official RN 0.72 template + `vega project` tooling — that
