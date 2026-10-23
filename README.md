@@ -12,6 +12,40 @@ Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — Fire TV tra
 
 ---
 
+## Quick start
+
+**You need:** the [Vega SDK](https://developer.amazon.com/vega) (`vega` CLI), Node 18+,
+and a Fire TV (Vega OS) device or the Vega Virtual Device.
+
+```bash
+# 1. Get the code and dependencies
+git clone https://github.com/Sk031397/WaitWhat.git
+cd WaitWhat
+source $HOME/vega/env          # load the Vega SDK (every new terminal)
+npm install
+
+# 2. Add the backend key (judges: the key is in the Devpost testing instructions)
+cp src/secrets.example.ts src/secrets.ts
+#    then edit src/secrets.ts and set ASK_API_KEY
+
+# 3. Start the Virtual Device (with a window), build, install and launch
+vega virtual-device start --gui
+npm run build:debug
+vega run-app build/x86_64-debug/sidekick_x86_64.vpkg
+```
+
+**Try it:** open **Tears of Steel** → a ✨ scene insight appears at 0:10 → hold the
+remote's **Menu (☰)** (or select **Ask Wait, What?**) → ask *"What's happening right
+now?"* or *"Take me to the middle and tell me what's happening"*. Then open a game
+from the **Sports** row and ask *"Break down this play"*.
+
+The app talks to an already-deployed backend (`ASK_ENDPOINT` in `src/config.ts`),
+so you don't need AWS to run it. To deploy your own backend, see
+[Backend](#2-backend-the-bedrock-endpoint). Tests: `npm test` (app) and
+`cd backend && npm test`.
+
+---
+
 ## The idea
 
 Everyone reaches for their phone while watching — *who's that actor, what did I
@@ -50,30 +84,53 @@ the content *and where you are in it*.
 
 ## Architecture
 
-```
-Hold ☰ / open panel → focus field → system keyboard mic / type     Natural-language nav
-        │                                                         "go to the middle"
-        ▼                                                    │
-VideoContext.snapshot()  { title, synopsis, positionSeconds, context, videoId }
- (what's on screen, where)                                   │
-        │                                            parseTimePhrase /
-        ▼                                            parseSeekIntent → seek
-buildAskRequest()  ──►  POST /ask  ──►  API Gateway ──► Lambda ──► Bedrock Nova
-        │                  (11s timeout)                   │        (Converse,
-        │                                   S3 frames/<videoId>/<sec>.jpg   Nova Lite,
-        │                                   (last 4 frames ≤ position) ──►  text + images)
-        │                                                  ▼
-        │                                     { text } or an error — never a canned answer
-        ▼
-SideKickOverlay (right-edge panel)  ──►  answer + timeline marker + VoiceView
-        ▼
-VideoPlayer (W3C media) keeps playing — never paused
+```mermaid
+flowchart TB
+  subgraph TV["Fire TV / Vega OS app (React Native)"]
+    direction LR
+    Remote["Remote: hold Menu ☰<br/>or Ask tab"] --> Input["QuestionInput<br/>system keyboard mic / type"]
+    Input --> Router{"Seek phrase?<br/>parseTimePhrase / parseSeekIntent"}
+    Router -- "pure control<br/>'go to the middle'" --> Player["VideoPlayer<br/>W3C media, never paused"]
+    Router -- question --> Snap["VideoContext.snapshot()<br/>title, synopsis, position, videoId"]
+    Snap --> Build["buildAskRequest()<br/>+ last 3 exchanges"]
+    Build --> Client["bedrockClient.ask()<br/>11s timeout, x-ww-key"]
+    Client --> Overlay["SideKickOverlay<br/>answer + timeline marker"]
+    Overlay --> VoiceView["VoiceView<br/>announces answer"]
+    Player -- position --> Insights["insights.ts<br/>scene insight due?"]
+    InsightData[("src/data/insights.ts")] --> Insights
+    Insights --> Card["✨ Scene insight card"]
+  end
 
-Player opens ──► POST /ask {warmup:true}   (wakes a cold Lambda before the first question)
+  subgraph AWS["AWS (us-east-1)"]
+    direction LR
+    APIGW["API Gateway HTTP API<br/>POST /ask, throttled 5 req/s"] --> Lambda["Lambda: handler.ts<br/>validate, check key"]
+    Lambda -- "last 4 frames ≤ position" --> S3[("S3: frames/videoId/sec.jpg<br/>+ sports clips")]
+    Lambda -- "Converse: prompt + images" --> Bedrock["Amazon Bedrock<br/>Nova Lite"]
+  end
 
-Offline: extract-frames.sh ──► S3 frames ──► generateInsights.ts (scene changes →
-Nova Lite one-liners) ──► src/data/insights.ts ──► ✨ card when playback reaches each
+  Client -- "HTTPS POST /ask" --> APIGW
+  Lambda -- "{ text } or error,<br/>never a canned answer" --> Client
+  Player -. "on open: {warmup:true}" .-> APIGW
+
+  subgraph Offline["Offline, before shipping"]
+    direction LR
+    Extract["scripts/extract-frames.sh<br/>ffmpeg: 768px frame every 2s"] --> S3
+    Gen["backend/generateInsights.ts<br/>ffmpeg scene changes → Nova Lite"] --> InsightData
+  end
+  S3 -. frames .-> Gen
+  Gen -. "one-liners" .-> Bedrock
 ```
+
+(A rendered copy is in [`docs/architecture.png`](docs/architecture.png).)
+
+**How a question flows:** the viewer holds Menu (☰) and asks. Pure seek commands
+("go to the middle") are handled on the TV with no network call. Everything else
+becomes a grounded request (title, synopsis, playback position, video id, recent
+exchanges) sent to API Gateway. The Lambda checks the shared key, loads the last
+four frames at or before the position from S3, and sends them with the question to
+Nova Lite. The answer appears in the side panel, drops a marker on the timeline and
+is announced by VoiceView, while the video keeps playing. Scene insights are
+generated offline from the same frames and ship with the app.
 
 ### Why not `react-native-video`?
 
