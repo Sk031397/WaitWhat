@@ -32,3 +32,4 @@ npm-debug.log*
 samconfig.toml
 frames-out/
 buildinfo.json
+src/secrets.ts

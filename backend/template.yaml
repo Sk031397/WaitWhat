@@ -19,7 +19,7 @@ Parameters:
   AskApiKey:
     Type: String
     NoEcho: true
-    Description: Shared key the app sends in x-ww-key (must match src/config.ts).
+    Description: Shared key the app sends in x-ww-key (must match src/secrets.ts).
 
 Globals:
   Function:

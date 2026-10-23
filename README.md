@@ -192,6 +192,10 @@ Then point the app at the endpoint — in `src/config.ts` set `ASK_ENDPOINT`, or
 call `setAskEndpoint('https://…/ask')` at startup. (A live API Gateway endpoint
 is already wired in `src/config.ts` for this submission.)
 
+The shared `x-ww-key` lives in `src/secrets.ts`, which is gitignored: copy
+`src/secrets.example.ts` to `src/secrets.ts` and set `ASK_API_KEY` to the same
+value the Lambda uses (`backend/deploy.sh` reads it from there).
+
 ### Bedrock access
 Enable model access for an **Amazon Nova** model in your region
 (`aws bedrock list-inference-profiles --region us-east-1` to confirm the id).

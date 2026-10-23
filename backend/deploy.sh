@@ -4,7 +4,7 @@
 #   cd backend && ./deploy.sh
 #
 # Builds a prod-only zip, updates the function code + env (ASK_API_KEY is read
-# from src/config.ts so app and backend always match), throttles the API stage,
+# from src/secrets.ts so app and backend always match), throttles the API stage,
 # and caps Lambda concurrency.
 #
 # Rollback: version 1 of sidekick-ask is a published snapshot of the pre-fix
@@ -21,7 +21,7 @@ REGION=us-east-1
 MODEL=us.amazon.nova-lite-v1:0   # multimodal: reads the video frames
 BUCKET=sidekickvegaos
 HERE="$(cd "$(dirname "$0")" && pwd)"
-KEY="$(grep -oP "ASK_API_KEY = '\K[^']+" "$HERE/../src/config.ts")"
+KEY="$(grep -oP "ASK_API_KEY = '\K[^']+" "$HERE/../src/secrets.ts")"
 STAGE="$(mktemp -d)"
 ZIP="$STAGE.zip"
 

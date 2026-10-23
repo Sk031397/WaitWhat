@@ -14,11 +14,11 @@
 export const ASK_ENDPOINT = 'https://u7ycv4t5kc.execute-api.us-east-1.amazonaws.com/ask';
 
 /**
- * Shared key sent as `x-ww-key`; must match the Lambda's ASK_API_KEY. It ships
- * inside the app (and this repo is public), so it's a speed bump against
- * casual scanners, not a secret. API Gateway throttling is the real cost cap.
+ * Shared key sent as `x-ww-key`; must match the Lambda's ASK_API_KEY. Lives in
+ * the gitignored src/secrets.ts (copy src/secrets.example.ts). API Gateway
+ * throttling is the real cost cap.
  */
-export const ASK_API_KEY = 'ww_PTfoiXpATWW82NL9feMnega8';
+export { ASK_API_KEY } from './secrets';
 
 /** True when no real endpoint has been configured yet. */
 export const isPlaceholderEndpoint = (url: string): boolean =>
