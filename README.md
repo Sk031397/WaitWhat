@@ -234,7 +234,7 @@ Wait, What? solves behaviors that are near-universal, and it reaches audiences a
 plain companion app would miss:
 
 - **Everyone who reaches for their phone mid-show** — "who is that actor?",
-  "what happened last episode?" — answered on the TV without pausing.
+  "what's happening right now?" — answered on the TV without pausing.
 - **Anyone who wants to move around the content hands-free** — "take me to the
   middle", "go back to 0:10 and tell me what's happening" — natural-language
   navigation that seeks *and* explains, instead of blind scrubbing.

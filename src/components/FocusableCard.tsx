@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { Pressable, View, Text, Image, StyleSheet, Animated } from 'react-native';
-import { CatalogItem } from '@sidekick/data/types';
-import { theme } from '@sidekick/theme';
+import React, {useRef, useState} from 'react';
+import {Pressable, View, Text, Image, StyleSheet, Animated} from 'react-native';
+import {CatalogItem} from '@sidekick/data/types';
+import {theme} from '@sidekick/theme';
 
 /**
  * FocusableCard — a thumbnail tile for the home grid.
@@ -32,22 +32,33 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
 
   const animateFocus = (on: boolean) => {
     Animated.parallel([
-      Animated.spring(scale, { toValue: on ? 1.1 : 1, useNativeDriver: true, speed: 20, bounciness: 8 }),
-      Animated.timing(glow, { toValue: on ? 1 : 0, duration: 180, useNativeDriver: true }),
+      Animated.spring(scale, {
+        toValue: on ? 1.1 : 1,
+        useNativeDriver: true,
+        speed: 20,
+        bounciness: 8,
+      }),
+      Animated.timing(glow, {
+        toValue: on ? 1 : 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
   return (
-    <Animated.View style={[styles.wrap, { transform: [{ scale }] }]}>
+    <Animated.View style={[styles.wrap, {transform: [{scale}]}]}>
       {/* Animated accent glow ring (opacity-driven; works without shadows) */}
       <Animated.View
         pointerEvents="none"
-        style={[styles.glowRing, { borderColor: accent, opacity: glow }]}
+        style={[styles.glowRing, {borderColor: accent, opacity: glow}]}
       />
       <Pressable
         hasTVPreferredFocus={hasTVPreferredFocus}
         accessibilityRole="button"
-        accessibilityLabel={`${item.title}${item.genres ? `, ${item.genres.join(', ')}` : ''}${item.rating ? `, rated ${item.rating}` : ''}. Press to play.`}
+        accessibilityLabel={`${item.title}${
+          item.genres ? `, ${item.genres.join(', ')}` : ''
+        }${item.rating ? `, rated ${item.rating}` : ''}. Press to play.`}
         onPress={onPress}
         onFocus={() => {
           setFocused(true);
@@ -58,10 +69,9 @@ export const FocusableCard: React.FC<FocusableCardProps> = ({
           setFocused(false);
           animateFocus(false);
         }}
-        style={[styles.card, focused && styles.cardFocused]}
-      >
+        style={[styles.card, focused && styles.cardFocused]}>
         {item.thumbnail ? (
-          <Image source={{ uri: item.thumbnail }} style={styles.image} />
+          <Image source={{uri: item.thumbnail}} style={styles.image} />
         ) : (
           <View style={styles.placeholder} />
         )}
@@ -110,12 +120,12 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.focusBorder,
     borderWidth: 6,
     shadowColor: theme.colors.focus,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.9,
     shadowRadius: 20,
     elevation: 15,
   },
-  image: { width: '100%', height: '100%', resizeMode: 'cover' },
+  image: {width: '100%', height: '100%', resizeMode: 'cover'},
   placeholder: {
     width: '100%',
     height: '100%',
@@ -130,7 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
     paddingVertical: theme.spacing.xs / 2,
   },
-  pillSports: { backgroundColor: theme.colors.sports },
+  pillSports: {backgroundColor: theme.colors.sports},
   pillText: {
     color: theme.colors.textPrimary,
     fontSize: theme.font.caption,

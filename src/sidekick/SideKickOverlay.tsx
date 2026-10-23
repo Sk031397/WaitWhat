@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,19 @@ import {
   Platform,
   AccessibilityInfo,
 } from 'react-native';
-import { AskTurn, SideKickAnswer } from '@sidekick/data/types';
-import { theme } from '@sidekick/theme';
-import { useVideoContext } from '@sidekick/player/useVideoContext';
-import { QuestionInput } from './QuestionInput';
-import { buildAskRequest, suggestedPrompts } from './ModeRouter';
-import { ask } from './bedrockClient';
-import { formatTime } from '@sidekick/util/formatTime';
-import { parseSeekIntent, parseFractionalPhrase } from '@sidekick/util/parseTimePhrase';
-import { GradientScrim } from '@sidekick/components/GradientScrim';
-import { useTypewriter } from '@sidekick/util/useTypewriter';
+import {AskTurn, SideKickAnswer} from '@sidekick/data/types';
+import {theme} from '@sidekick/theme';
+import {useVideoContext} from '@sidekick/player/useVideoContext';
+import {QuestionInput} from './QuestionInput';
+import {buildAskRequest, suggestedPrompts} from './ModeRouter';
+import {ask} from './bedrockClient';
+import {formatTime} from '@sidekick/util/formatTime';
+import {
+  parseSeekIntent,
+  parseFractionalPhrase,
+} from '@sidekick/util/parseTimePhrase';
+import {GradientScrim} from '@sidekick/components/GradientScrim';
+import {useTypewriter} from '@sidekick/util/useTypewriter';
 
 /** How many prior exchanges to send with a question. */
 const MAX_HISTORY_TURNS = 3;
@@ -36,13 +39,22 @@ const MAX_HISTORY_TURNS = 3;
  * path on VegaOS. The recognized/typed text is routed to Bedrock by mode.
  */
 export const SideKickOverlay: React.FC = () => {
-  const { mode, snapshot, addAskMarker, resurface, requestSeek, durationSeconds } =
-    useVideoContext();
+  const {
+    mode,
+    snapshot,
+    addAskMarker,
+    resurface,
+    requestSeek,
+    durationSeconds,
+  } = useVideoContext();
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
   // Last few live exchanges for the current title, so "who's he?" has context.
-  const history = useRef<{ itemId: string; turns: AskTurn[] }>({ itemId: '', turns: [] });
+  const history = useRef<{itemId: string; turns: AskTurn[]}>({
+    itemId: '',
+    turns: [],
+  });
 
   // Panel slides along X. Starts fully off-screen (= panel width).
   const translateX = useRef(new Animated.Value(theme.overlayWidth)).current;
@@ -70,11 +82,15 @@ export const SideKickOverlay: React.FC = () => {
   // ----- Signature mode-switch animation -----
   // modeAnim: 0 = general, 1 = sports. Drives an interpolated accent color and
   // a badge "morph" pulse so context-awareness is something you SEE happen.
-  const modeAnim = useRef(new Animated.Value(mode === 'sports' ? 1 : 0)).current;
+  const modeAnim = useRef(
+    new Animated.Value(mode === 'sports' ? 1 : 0),
+  ).current;
   const badgePulse = useRef(new Animated.Value(1)).current;
   const prevMode = useRef(mode);
   useEffect(() => {
-    if (prevMode.current === mode) return;
+    if (prevMode.current === mode) {
+      return;
+    }
     prevMode.current = mode;
     // Accent sweeps to the new mode's color; badge pops then settles.
     Animated.parallel([
@@ -84,8 +100,17 @@ export const SideKickOverlay: React.FC = () => {
         useNativeDriver: false, // color interpolation needs JS driver
       }),
       Animated.sequence([
-        Animated.timing(badgePulse, { toValue: 1.18, duration: 180, useNativeDriver: true }),
-        Animated.spring(badgePulse, { toValue: 1, speed: 14, bounciness: 10, useNativeDriver: true }),
+        Animated.timing(badgePulse, {
+          toValue: 1.18,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.spring(badgePulse, {
+          toValue: 1,
+          speed: 14,
+          bounciness: 10,
+          useNativeDriver: true,
+        }),
       ]),
     ]).start();
   }, [mode, modeAnim, badgePulse]);
@@ -99,16 +124,18 @@ export const SideKickOverlay: React.FC = () => {
   const answerAnim = useRef(new Animated.Value(0)).current;
   const playAnswerIn = useCallback(() => {
     answerAnim.setValue(0);
-    Animated.timing(answerAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    Animated.timing(answerAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   }, [answerAnim]);
 
   // Announce answers to VoiceView (the only speech-output path on Vega — there
   // is no app-level TTS). If the user has VoiceView on, it reads this aloud.
   const announce = useCallback((a: SideKickAnswer) => {
     const where = a.askedAtLabel ? ` at ${a.askedAtLabel}` : '';
-    AccessibilityInfo.announceForAccessibility?.(
-      `SideKick${where}: ${a.text}`,
-    );
+    AccessibilityInfo.announceForAccessibility?.(`SideKick${where}: ${a.text}`);
   }, []);
 
   // When the user selects a timeline marker, re-surface that saved answer.
@@ -126,7 +153,7 @@ export const SideKickOverlay: React.FC = () => {
   // Typewriter reveal of the answer text (only once the answer is in, not while
   // pending). Keyed on answer.id so each new answer re-reveals.
   const revealTarget = answer && !answer.pending ? answer.text : '';
-  const { shown: revealedText, done: revealDone } = useTypewriter(
+  const {shown: revealedText, done: revealDone} = useTypewriter(
     revealTarget,
     true,
   );
@@ -134,10 +161,13 @@ export const SideKickOverlay: React.FC = () => {
   const handleSubmit = useCallback(
     async (question: string) => {
       const snap = snapshot();
-      if (!snap.item) return;
+      if (!snap.item) {
+        return;
+      }
 
       const dur = durationSeconds || Infinity;
-      const clampTime = (s: number) => Math.max(0, dur === Infinity ? s : Math.min(dur, s));
+      const clampTime = (s: number) =>
+        Math.max(0, dur === Infinity ? s : Math.min(dur, s));
 
       let jumpedToSeconds: number | null = null;
 
@@ -205,7 +235,8 @@ export const SideKickOverlay: React.FC = () => {
       // The answer is grounded at the jumped-to time when present, else "now".
       const askedAtSeconds = jumpedToSeconds ?? snap.positionSeconds;
       const askedAtLabel = formatTime(askedAtSeconds);
-      const jumpedToLabel = jumpedToSeconds !== null ? formatTime(jumpedToSeconds) : undefined;
+      const jumpedToLabel =
+        jumpedToSeconds !== null ? formatTime(jumpedToSeconds) : undefined;
 
       const pendingId = `${Date.now()}`;
       setAnswer({
@@ -245,16 +276,28 @@ export const SideKickOverlay: React.FC = () => {
       announce(finalAnswer);
       playAnswerIn();
       // Failures aren't answers: don't remember them or mark the timeline.
-      if (res.failed) return;
-      const prior = history.current.itemId === snap.item.id ? history.current.turns : [];
+      if (res.failed) {
+        return;
+      }
+      const prior =
+        history.current.itemId === snap.item.id ? history.current.turns : [];
       history.current = {
         itemId: snap.item.id,
-        turns: [...prior, { question, answer: res.text }].slice(-MAX_HISTORY_TURNS),
+        turns: [...prior, {question, answer: res.text}].slice(
+          -MAX_HISTORY_TURNS,
+        ),
       };
       // Drop a navigable marker carrying this answer at the (possibly jumped) time.
       addAskMarker(askedAtSeconds, snap.mode, finalAnswer);
     },
-    [snapshot, addAskMarker, announce, playAnswerIn, requestSeek, durationSeconds],
+    [
+      snapshot,
+      addAskMarker,
+      announce,
+      playAnswerIn,
+      requestSeek,
+      durationSeconds,
+    ],
   );
 
   return (
@@ -268,18 +311,20 @@ export const SideKickOverlay: React.FC = () => {
           onPress={() => setOpen(true)}
           onFocus={() => setTabFocused(true)}
           onBlur={() => setTabFocused(false)}
-          style={[styles.tab, { borderColor: accent }, tabFocused && styles.tabFocused]}
-        >
-          <View style={[styles.tabDot, { backgroundColor: accent }]} />
+          style={[
+            styles.tab,
+            {borderColor: accent},
+            tabFocused && styles.tabFocused,
+          ]}>
+          <View style={[styles.tabDot, {backgroundColor: accent}]} />
           <Text style={styles.tabText}>Ask Wait, What?</Text>
         </Pressable>
       ) : null}
 
       {/* ---- Slide-out panel ---- */}
       <Animated.View
-        style={[styles.panel, { transform: [{ translateX }] }]}
-        pointerEvents={open ? 'auto' : 'none'}
-      >
+        style={[styles.panel, {transform: [{translateX}]}]}
+        pointerEvents={open ? 'auto' : 'none'}>
         {/* Soft left-edge fade so the panel blends into the video */}
         <GradientScrim
           color="#0B0C10"
@@ -292,9 +337,11 @@ export const SideKickOverlay: React.FC = () => {
           <Animated.View
             style={[
               styles.badge,
-              { backgroundColor: animatedAccent, transform: [{ scale: badgePulse }] },
-            ]}
-          >
+              {
+                backgroundColor: animatedAccent,
+                transform: [{scale: badgePulse}],
+              },
+            ]}>
             <Text style={styles.badgeText}>
               {mode === 'sports' ? 'SPORTS MODE' : 'SIDEKICK'}
             </Text>
@@ -303,8 +350,7 @@ export const SideKickOverlay: React.FC = () => {
             onPress={() => setOpen(false)}
             accessibilityRole="button"
             accessibilityLabel="Close SideKick"
-            style={styles.close}
-          >
+            style={styles.close}>
             <Text style={styles.closeText}>Close ✕</Text>
           </Pressable>
         </View>
@@ -312,8 +358,7 @@ export const SideKickOverlay: React.FC = () => {
         <View
           style={styles.answerArea}
           accessible
-          accessibilityLiveRegion="polite"
-        >
+          accessibilityLiveRegion="polite">
           {answer ? (
             <Animated.View
               style={{
@@ -326,14 +371,13 @@ export const SideKickOverlay: React.FC = () => {
                     }),
                   },
                 ],
-              }}
-            >
+              }}>
               <Text style={styles.question} numberOfLines={2}>
                 “{answer.question}”
               </Text>
               {answer.jumpedToLabel ? (
-                <View style={[styles.jumpPill, { borderColor: accent }]}>
-                  <Text style={[styles.jumpPillText, { color: accent }]}>
+                <View style={[styles.jumpPill, {borderColor: accent}]}>
+                  <Text style={[styles.jumpPillText, {color: accent}]}>
                     ⤷ Jumped to {answer.jumpedToLabel}
                   </Text>
                 </View>
@@ -352,10 +396,14 @@ export const SideKickOverlay: React.FC = () => {
                 <>
                   <Text style={styles.answerText}>
                     {revealedText}
-                    {!revealDone ? <Text style={{ color: accent }}>▋</Text> : null}
+                    {!revealDone ? (
+                      <Text style={{color: accent}}>▋</Text>
+                    ) : null}
                   </Text>
                   {revealDone && answer.failed ? (
-                    <Text style={styles.failedNote}>no answer — connection problem</Text>
+                    <Text style={styles.failedNote}>
+                      no answer — connection problem
+                    </Text>
                   ) : null}
                 </>
               )}
@@ -374,7 +422,9 @@ export const SideKickOverlay: React.FC = () => {
 
         {/* Accessibility affordance — makes the spoken-answers feature visible */}
         <View style={styles.a11yRow}>
-          <Text style={styles.a11yText}>🔊 Answers are read aloud with VoiceView</Text>
+          <Text style={styles.a11yText}>
+            🔊 Answers are read aloud with VoiceView
+          </Text>
         </View>
 
         {/* Real voice/text entry (system keyboard mic = Vega STT) */}
@@ -390,7 +440,7 @@ export const SideKickOverlay: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { ...StyleSheet.absoluteFillObject },
+  root: {...StyleSheet.absoluteFillObject},
 
   tab: {
     position: 'absolute',
@@ -406,7 +456,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
   },
-  tabFocused: { borderWidth: 4, borderEndWidth: 0, transform: [{ scale: 1.06 }] },
+  tabFocused: {borderWidth: 4, borderEndWidth: 0, transform: [{scale: 1.06}]},
   tabDot: {
     width: theme.spacing.sm,
     height: theme.spacing.sm,
@@ -456,9 +506,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radius.sm,
   },
-  closeText: { color: theme.colors.textSecondary, fontSize: theme.font.caption },
+  closeText: {color: theme.colors.textSecondary, fontSize: theme.font.caption},
 
-  answerArea: { flex: 1, marginVertical: theme.spacing.md },
+  answerArea: {flex: 1, marginVertical: theme.spacing.md},
   a11yRow: {
     marginBottom: theme.spacing.sm,
   },
@@ -503,7 +553,7 @@ const styles = StyleSheet.create({
     fontSize: theme.font.title,
     lineHeight: theme.font.title * 1.3,
   },
-  pending: { flexDirection: 'row', alignItems: 'center' },
+  pending: {flexDirection: 'row', alignItems: 'center'},
   pendingText: {
     color: theme.colors.textSecondary,
     fontSize: theme.font.body,
@@ -514,7 +564,7 @@ const styles = StyleSheet.create({
     fontSize: theme.font.caption,
     marginTop: theme.spacing.sm,
   },
-  hints: { marginTop: theme.spacing.md },
+  hints: {marginTop: theme.spacing.md},
   hintTitle: {
     color: theme.colors.textSecondary,
     fontSize: theme.font.body,

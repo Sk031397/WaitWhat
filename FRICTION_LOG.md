@@ -151,7 +151,8 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
   `aws-marketplace:Subscribe/ViewSubscriptions`.
 - **Severity:** High (blocked live Claude).
 - **Workaround:** Switched to Amazon's first-party **Nova Micro**, which has no
-  Marketplace subscription step and worked instantly; also added the Marketplace
+  Marketplace subscription step and worked instantly (later moved to Nova Lite
+  so the model can see video frames); also added the Marketplace
   actions to the Lambda role.
 - **Suggestion:** In the Bedrock Model Access UI, surface the billing/Marketplace
   prerequisite for third-party models *before* the user thinks access is granted.

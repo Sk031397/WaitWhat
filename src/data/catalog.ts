@@ -1,4 +1,4 @@
-import { CatalogItem } from './types';
+import {CatalogItem} from './types';
 
 /**
  * ╔════════════════════════════════════════════════════════════════════╗
@@ -28,7 +28,8 @@ const img = (seed: string, w: number, h: number) =>
 
 // Known-good sample clips (verified to play on the Vega simulator).
 const SINTEL = 'https://media.w3.org/2010/05/sintel/trailer.mp4';
-const BBB_10S = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
+const BBB_10S =
+  'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
 
 // CC-licensed films from Amazon's vega-sports-app CDN (MIT-0, verified
 // reachable + decode on the Vega sim). Reused here as general film content.
@@ -47,27 +48,85 @@ const sportImg = (name: string) => `${S3}/${name}.jpg`;
 
 /** ⟶ EDIT THIS MAP to use your own content. Keys are catalog item ids. */
 export const MEDIA: Record<string, Media> = {
-  show01:  { video: SINTEL,     thumbnail: img('northern', 420, 260), hero: img('northern-hero', 1920, 1080) },
-  movie03: { video: FILM.tears, thumbnail: img('steel', 420, 260),    hero: img('steel-hero', 1920, 1080) },
-  show02:  { video: SINTEL,     thumbnail: img('glass', 420, 260),    hero: img('glass-hero', 1920, 1080) },
-  movie01: { video: SINTEL,     thumbnail: img('lanterns', 420, 260), hero: img('lanterns-hero', 1920, 1080) },
-  movie02: { video: BBB_10S,    thumbnail: img('dust', 420, 260),     hero: img('dust-hero', 1920, 1080) },
-  movie04: { video: FILM.cosmos,thumbnail: img('cosmos', 420, 260),   hero: img('cosmos-hero', 1920, 1080) },
-  movie05: { video: FILM.glass, thumbnail: img('halflife', 420, 260), hero: img('halflife-hero', 1920, 1080) },
+  show01: {
+    video: SINTEL,
+    thumbnail: img('sintel', 420, 260),
+    hero: img('sintel-hero', 1920, 1080),
+  },
+  movie03: {
+    video: FILM.tears,
+    thumbnail: img('steel', 420, 260),
+    hero: img('steel-hero', 1920, 1080),
+  },
+  movie02: {
+    video: BBB_10S,
+    thumbnail: img('bunny', 420, 260),
+    hero: img('bunny-hero', 1920, 1080),
+  },
+  movie04: {
+    video: FILM.cosmos,
+    thumbnail: img('cosmos', 420, 260),
+    hero: img('cosmos-hero', 1920, 1080),
+  },
+  movie05: {
+    video: FILM.glass,
+    thumbnail: img('halflife', 420, 260),
+    hero: img('halflife-hero', 1920, 1080),
+  },
   // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
-  game01:  { video: sportVid('basketball'),        thumbnail: sportImg('basketball'),        hero: sportImg('basketball') },
-  game02:  { video: sportVid('american_football'), thumbnail: sportImg('american_football'), hero: sportImg('american_football') },
-  game03:  { video: sportVid('hockey'),            thumbnail: sportImg('hockey'),            hero: sportImg('hockey') },
-  game04:  { video: sportVid('soccer'),            thumbnail: sportImg('soccer'),            hero: sportImg('soccer') },
-  game05:  { video: sportVid('tennis'),            thumbnail: sportImg('tennis'),            hero: sportImg('tennis') },
-  game06:  { video: sportVid('boxing'),            thumbnail: sportImg('boxing'),            hero: sportImg('boxing') },
-  game07:  { video: sportVid('wrestling'),         thumbnail: sportImg('wrestling'),         hero: sportImg('wrestling') },
-  game08:  { video: sportVid('baseball'),          thumbnail: sportImg('baseball'),          hero: sportImg('baseball') },
-  game09:  { video: sportVid('rowing'),            thumbnail: sportImg('rowing'),            hero: sportImg('rowing') },
+  game01: {
+    video: sportVid('basketball'),
+    thumbnail: sportImg('basketball'),
+    hero: sportImg('basketball'),
+  },
+  game02: {
+    video: sportVid('american_football'),
+    thumbnail: sportImg('american_football'),
+    hero: sportImg('american_football'),
+  },
+  game03: {
+    video: sportVid('hockey'),
+    thumbnail: sportImg('hockey'),
+    hero: sportImg('hockey'),
+  },
+  game04: {
+    video: sportVid('soccer'),
+    thumbnail: sportImg('soccer'),
+    hero: sportImg('soccer'),
+  },
+  game05: {
+    video: sportVid('tennis'),
+    thumbnail: sportImg('tennis'),
+    hero: sportImg('tennis'),
+  },
+  game06: {
+    video: sportVid('boxing'),
+    thumbnail: sportImg('boxing'),
+    hero: sportImg('boxing'),
+  },
+  game07: {
+    video: sportVid('wrestling'),
+    thumbnail: sportImg('wrestling'),
+    hero: sportImg('wrestling'),
+  },
+  game08: {
+    video: sportVid('baseball'),
+    thumbnail: sportImg('baseball'),
+    hero: sportImg('baseball'),
+  },
+  game09: {
+    video: sportVid('rowing'),
+    thumbnail: sportImg('rowing'),
+    hero: sportImg('rowing'),
+  },
 };
 
 const m = (id: string): Media =>
-  MEDIA[id] ?? { video: SINTEL, thumbnail: img(id, 420, 260), hero: img(id, 1920, 1080) };
+  MEDIA[id] ?? {
+    video: SINTEL,
+    thumbnail: img(id, 420, 260),
+    hero: img(id, 1920, 1080),
+  };
 
 /**
  * The catalog — all general shows/movies. SideKick answers questions about any
@@ -108,7 +167,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Football', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { homeTeam: 'Granite Bay', awayTeam: 'Rivercity Hawks' },
+    context: {homeTeam: 'Granite Bay', awayTeam: 'Rivercity Hawks'},
   },
   {
     id: 'game03',
@@ -123,7 +182,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Hockey', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { homeTeam: 'Harbor Wolves', awayTeam: 'Frost' },
+    context: {homeTeam: 'Harbor Wolves', awayTeam: 'Frost'},
   },
   {
     id: 'game04',
@@ -138,7 +197,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Soccer', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { homeTeam: 'Verde FC', awayTeam: 'Azure United' },
+    context: {homeTeam: 'Verde FC', awayTeam: 'Azure United'},
   },
   {
     id: 'game05',
@@ -153,7 +212,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Tennis', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { playerOne: 'R. Vale', playerTwo: 'L. Chen' },
+    context: {playerOne: 'R. Vale', playerTwo: 'L. Chen'},
   },
   {
     id: 'game06',
@@ -168,7 +227,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Boxing', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { fighterOne: 'K. Mercer', fighterTwo: 'O. Diallo' },
+    context: {fighterOne: 'K. Mercer', fighterTwo: 'O. Diallo'},
   },
   {
     id: 'game07',
@@ -183,7 +242,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Wrestling', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { wrestlerOne: 'T. Kessler', wrestlerTwo: 'D. Boone' },
+    context: {wrestlerOne: 'T. Kessler', wrestlerTwo: 'D. Boone'},
   },
   {
     id: 'game08',
@@ -198,7 +257,7 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Baseball', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { homeTeam: 'Crestfall', awayTeam: 'Ironside' },
+    context: {homeTeam: 'Crestfall', awayTeam: 'Ironside'},
   },
   {
     id: 'game09',
@@ -213,28 +272,29 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Rowing', 'Live'],
     releaseYear: 2026,
     rating: 'LIVE',
-    context: { teamOne: 'Meridian', teamTwo: 'Stonebridge' },
+    context: {teamOne: 'Meridian', teamTwo: 'Stonebridge'},
   },
 
   // ----- Row: Featured -----
   {
     id: 'show01',
-    title: 'The Northern Expanse',
+    title: 'Sintel',
     row: 'Featured',
-    contentType: 'show',
+    contentType: 'movie',
     videoUrl: m('show01').video,
     thumbnail: m('show01').thumbnail,
     headerImage: m('show01').hero,
     synopsis:
-      'A survival drama following two estranged siblings guiding a research crew across a collapsing arctic shelf. Season 2, Episode 4: the crew discovers the supply cache has been raided.',
-    genres: ['Drama', 'Survival'],
-    releaseYear: 2025,
-    rating: '8.7',
+      'Trailer for the Blender Foundation fantasy short: Sintel, a lone young woman, crosses snowy mountains and hostile lands searching for Scales, the baby dragon she rescued and lost.',
+    genres: ['Fantasy', 'Animation', 'Adventure'],
+    releaseYear: 2010,
+    rating: '8.2',
     context: {
-      cast: ['Mara Lindqvist as Dr. Elin Vos', 'Theo Grant as Captain Reyes'],
-      previousEpisode:
-        'Elin confronted Reyes about the missing fuel logs; the storm front arrived early.',
-      genre: 'Survival drama',
+      characters: [
+        'Sintel, a wandering young warrior',
+        'Scales, her baby dragon',
+      ],
+      genre: 'Animated fantasy (trailer)',
     },
   },
   {
@@ -248,7 +308,7 @@ export const CATALOG: CatalogItem[] = [
     synopsis:
       'A sci-fi short: a group of warriors and scientists in a future Amsterdam attempt to save the world from destructive robots using memories of the past.',
     genres: ['Sci-Fi', 'Action'],
-    releaseYear: 2024,
+    releaseYear: 2012,
     rating: '8.0',
     context: {
       cast: ['Derek de Lint as Thom', 'Sergio Hasselbaink as Barley'],
@@ -258,59 +318,31 @@ export const CATALOG: CatalogItem[] = [
 
   // ----- Row: Shows & Movies -----
   {
-    id: 'show02',
-    title: 'Glass Harbor',
-    row: 'Shows & Movies',
-    contentType: 'show',
-    videoUrl: m('show02').video,
-    thumbnail: m('show02').thumbnail,
-    headerImage: m('show02').hero,
-    synopsis:
-      'A detective anthology set in a rain-soaked coastal city where every case ties back to a single disappearance.',
-    genres: ['Mystery', 'Crime'],
-    releaseYear: 2024,
-    rating: '8.1',
-    context: {
-      cast: ['Nadia Price as Det. Correa', 'Sam Oyelaran as ADA Finch'],
-      previousEpisode: 'Correa found the ferry ticket stub in the victim’s coat.',
-    },
-  },
-  {
-    id: 'movie01',
-    title: 'Paper Lanterns',
-    row: 'Shows & Movies',
-    contentType: 'movie',
-    videoUrl: m('movie01').video,
-    thumbnail: m('movie01').thumbnail,
-    headerImage: m('movie01').hero,
-    synopsis:
-      'A quiet drama about a festival lantern-maker reuniting with the daughter he lost touch with over twenty years.',
-    genres: ['Drama'],
-    releaseYear: 2023,
-    rating: '7.9',
-    context: { cast: ['Ken Watari as Hiro', 'Lia Monroe as June'] },
-  },
-  {
     id: 'movie02',
-    title: 'Dust & Signal',
+    title: 'Big Buck Bunny',
     row: 'Shows & Movies',
     contentType: 'movie',
     videoUrl: m('movie02').video,
     thumbnail: m('movie02').thumbnail,
     headerImage: m('movie02').hero,
     synopsis:
-      'Two radio operators in a near-future dust belt pick up a signal that should not exist.',
-    genres: ['Sci-Fi', 'Thriller'],
-    releaseYear: 2025,
-    rating: '8.3',
-    context: { cast: ['Priya Nalin as Asha', 'Diego Marín as Cole'] },
+      'A 10-second clip from the Blender Institute comedy short: a big, gentle rabbit in a sunny meadow, before three rodent bullies push him too far.',
+    genres: ['Animation', 'Comedy'],
+    releaseYear: 2008,
+    rating: '7.8',
+    context: {
+      characters: [
+        'Big Buck Bunny',
+        'Frank, Rinky and Gimera, the rodent bullies',
+      ],
+      genre: 'Animated comedy (clip)',
+    },
   },
 
-  // ----- Row: More to Explore -----
   {
     id: 'movie04',
     title: 'Cosmos Laundromat',
-    row: 'More to Explore',
+    row: 'Shows & Movies',
     contentType: 'movie',
     videoUrl: m('movie04').video,
     thumbnail: m('movie04').thumbnail,
@@ -318,14 +350,14 @@ export const CATALOG: CatalogItem[] = [
     synopsis:
       'A suicidal sheep named Franck meets a quirky salesman offering him the deal of a lifetime across infinite possible worlds.',
     genres: ['Animation', 'Comedy', 'Drama'],
-    releaseYear: 2023,
+    releaseYear: 2015,
     rating: '7.6',
-    context: { cast: ['Pierre as Franck', 'The Salesman'] },
+    context: {cast: ['Pierre as Franck', 'The Salesman']},
   },
   {
     id: 'movie05',
     title: 'Glass Half',
-    row: 'More to Explore',
+    row: 'Shows & Movies',
     contentType: 'movie',
     videoUrl: m('movie05').video,
     thumbnail: m('movie05').thumbnail,
@@ -333,9 +365,9 @@ export const CATALOG: CatalogItem[] = [
     synopsis:
       'A witty animated short about art, perception, and whether the glass is half full — told through a gallery of clashing opinions.',
     genres: ['Animation', 'Comedy'],
-    releaseYear: 2022,
+    releaseYear: 2015,
     rating: '7.4',
-    context: { cast: ['The Critic', 'The Optimist'] },
+    context: {cast: ['The Critic', 'The Optimist']},
   },
 ];
 
@@ -343,7 +375,9 @@ export const CATALOG: CatalogItem[] = [
 export const CATALOG_ROWS = (): string[] => {
   const seen: string[] = [];
   for (const item of CATALOG) {
-    if (item.row && !seen.includes(item.row)) seen.push(item.row);
+    if (item.row && !seen.includes(item.row)) {
+      seen.push(item.row);
+    }
   }
   return seen;
 };

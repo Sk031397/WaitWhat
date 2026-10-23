@@ -1,5 +1,9 @@
-import { AskRequest, AskResponse } from '@sidekick/data/types';
-import { ASK_API_KEY, ASK_ENDPOINT, isPlaceholderEndpoint } from '@sidekick/config';
+import {AskRequest, AskResponse} from '@sidekick/data/types';
+import {
+  ASK_API_KEY,
+  ASK_ENDPOINT,
+  isPlaceholderEndpoint,
+} from '@sidekick/config';
 
 /**
  * bedrockClient — talks to the SideKick backend `/ask` endpoint, which runs
@@ -20,30 +24,34 @@ const REQUEST_TIMEOUT_MS = 11000;
 
 export const ask = async (req: AskRequest): Promise<AskResponse> => {
   if (isPlaceholderEndpoint(endpoint)) {
-    return failure('Wait, What? isn\'t connected yet. Set ASK_ENDPOINT in src/config.ts.');
+    return failure(
+      "Wait, What? isn't connected yet. Set ASK_ENDPOINT in src/config.ts.",
+    );
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-ww-key': ASK_API_KEY },
+      headers: {'Content-Type': 'application/json', 'x-ww-key': ASK_API_KEY},
       body: JSON.stringify(req),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Backend returned ${res.status}`);
+    }
     const data = (await res.json()) as Partial<AskResponse>;
     if (typeof data?.text !== 'string' || !data.text.trim()) {
       throw new Error('Backend returned no answer text');
     }
-    return { text: data.text };
+    return {text: data.text};
   } catch (err) {
     console.warn('[SideKick] /ask failed:', err);
-    return failure('Couldn\'t reach Wait, What? just now. Try asking again.');
+    return failure("Couldn't reach Wait, What? just now. Try asking again.");
   } finally {
     // Covers the body read too, not just the headers.
     clearTimeout(timer);
   }
 };
 
-const failure = (text: string): AskResponse => ({ text, failed: true });
+const failure = (text: string): AskResponse => ({text, failed: true});

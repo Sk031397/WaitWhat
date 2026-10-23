@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { CATALOG, CATALOG_ROWS, itemsForRow, getCatalogItem } from '@sidekick/data/catalog';
-import { CatalogItem } from '@sidekick/data/types';
-import { FocusableCard } from '@sidekick/components/FocusableCard';
-import { GradientScrim } from '@sidekick/components/GradientScrim';
-import { Vignette } from '@sidekick/components/Vignette';
-import { theme } from '@sidekick/theme';
+import {
+  CATALOG,
+  CATALOG_ROWS,
+  itemsForRow,
+  getCatalogItem,
+} from '@sidekick/data/catalog';
+import {CatalogItem} from '@sidekick/data/types';
+import {FocusableCard} from '@sidekick/components/FocusableCard';
+import {GradientScrim} from '@sidekick/components/GradientScrim';
+import {Vignette} from '@sidekick/components/Vignette';
+import {theme} from '@sidekick/theme';
 
 /**
  * HomeScreen — the landing page.
@@ -23,7 +28,7 @@ import { theme } from '@sidekick/theme';
  *
  * Selecting a card navigates to the Player, where the SideKick overlay lives.
  */
-export const HomeScreen = ({ navigation }: { navigation: any }) => {
+export const HomeScreen = ({navigation}: {navigation: any}) => {
   const rows = useMemo(() => CATALOG_ROWS(), []);
   const [focusedId, setFocusedId] = useState<string>(CATALOG[0]?.id ?? '');
   const focused: CatalogItem | undefined = getCatalogItem(focusedId);
@@ -33,7 +38,9 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
   const heroFade = useRef(new Animated.Value(1)).current;
   const prevId = useRef(focusedId);
   useEffect(() => {
-    if (prevId.current === focusedId) return;
+    if (prevId.current === focusedId) {
+      return;
+    }
     prevId.current = focusedId;
     heroFade.setValue(0);
     Animated.timing(heroFade, {
@@ -44,7 +51,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
   }, [focusedId, heroFade]);
 
   const openPlayer = useCallback(
-    (item: CatalogItem) => navigation.navigate('Player', { itemId: item.id }),
+    (item: CatalogItem) => navigation.navigate('Player', {itemId: item.id}),
     [navigation],
   );
 
@@ -52,9 +59,12 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
     <View style={styles.container}>
       {/* ---- Hero header (driven by focused card) ---- */}
       <View style={styles.hero}>
-        <Animated.View style={[styles.heroImageWrap, { opacity: heroFade }]}>
+        <Animated.View style={[styles.heroImageWrap, {opacity: heroFade}]}>
           {focused?.headerImage ? (
-            <Image source={{ uri: focused.headerImage }} style={styles.heroImage} />
+            <Image
+              source={{uri: focused.headerImage}}
+              style={styles.heroImage}
+            />
           ) : (
             <View style={[styles.heroImage, styles.heroFallback]} />
           )}
@@ -75,7 +85,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
           bands={10}
         />
 
-        <Animated.View style={[styles.heroText, { opacity: heroFade }]}>
+        <Animated.View style={[styles.heroText, {opacity: heroFade}]}>
           <Text style={styles.brand}>SIDEKICK</Text>
           {focused ? (
             <>
@@ -103,8 +113,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
       <ScrollView
         style={styles.rowsScroll}
         contentContainerStyle={styles.rowsContent}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         {rows.map((rowTitle, rowIndex) => {
           const items = itemsForRow(rowTitle);
           return (
@@ -113,8 +122,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.rowList}
-              >
+                contentContainerStyle={styles.rowList}>
                 {items.map((item, i) => (
                   <FocusableCard
                     key={item.id}
@@ -137,13 +145,13 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: {flex: 1, backgroundColor: theme.colors.background},
 
-  hero: { width: '100%', height: theme.heroHeight, position: 'relative' },
-  heroImageWrap: { ...StyleSheet.absoluteFillObject },
-  heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  heroFallback: { backgroundColor: theme.colors.cardElevated },
-  heroScrimH: { width: '75%' },
+  hero: {width: '100%', height: theme.heroHeight, position: 'relative'},
+  heroImageWrap: {...StyleSheet.absoluteFillObject},
+  heroImage: {width: '100%', height: '100%', resizeMode: 'cover'},
+  heroFallback: {backgroundColor: theme.colors.cardElevated},
+  heroScrimH: {width: '75%'},
   heroText: {
     position: 'absolute',
     start: theme.safeZones.horizontal,
@@ -188,8 +196,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: -theme.spacing.xl, // pull rows up over the hero bottom
   },
-  rowsContent: { paddingBottom: theme.safeZones.vertical },
-  row: { marginBottom: theme.spacing.md },
+  rowsContent: {paddingBottom: theme.safeZones.vertical},
+  row: {marginBottom: theme.spacing.md},
   rowTitle: {
     color: theme.colors.textPrimary,
     fontSize: theme.font.title,

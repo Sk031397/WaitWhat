@@ -1,4 +1,4 @@
-import { Dimensions, PixelRatio } from 'react-native';
+import {Dimensions, PixelRatio} from 'react-native';
 
 /**
  * 10-foot UI scaling.
@@ -14,7 +14,7 @@ import { Dimensions, PixelRatio } from 'react-native';
 const REFERENCE_WIDTH = 1920;
 
 export const scaledPixels = (designPixels: number): number => {
-  const { width } = Dimensions.get('window');
+  const {width} = Dimensions.get('window');
   const ratio = width / REFERENCE_WIDTH;
   return PixelRatio.roundToNearestPixel(designPixels * ratio);
 };

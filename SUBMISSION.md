@@ -16,7 +16,7 @@ grounded on exactly what's playing and where you are in it.
 The bigger idea underneath: **the timeline should be something you can talk to.**
 Not a chat window bolted onto a video — a companion that understands the content,
 anchors every answer to the moment you asked, lets you *navigate by voice/words*
-("take me to the middle"), and proactively surfaces what matters.
+("take me to the middle"), and sees the actual frames on screen.
 
 ## What it does
 
@@ -37,9 +37,9 @@ While a show plays full-screen (playback never stops):
   answers on the game context (teams, venue, situation), so "catch me up" or
   "what's the score" answer in the moment. Teams/players are fictional (no real
   leagues/trademarks) over our own license-clear sports footage.
-- **It anticipates on shows too.** At key scene moments Wait, What? **proactively
-  surfaces an insight** ("New scene — the crew finds the cache raided; the
-  season's mystery begins") without being asked.
+- **It sees the screen.** Every question carries real frames from the video up
+  to your position, so "what's happening right now?" is answered from the
+  footage itself — and it can't spoil what's ahead.
 - **It's accessible.** Answers are announced through **VoiceView**, so a
   low-vision viewer hears what's on screen and what's happening — a viewing
   companion that *narrates*, not just displays.
@@ -60,13 +60,14 @@ While a show plays full-screen (playback never stops):
   dictate (`com.amazon.inputmethod.service`).
 
 **Backend (the AWS Builder piece)**
-- **Amazon Bedrock (Nova Micro) via the Converse API**, behind **Amazon API
+- **Amazon Bedrock (Nova Lite, multimodal) via the Converse API**, behind **Amazon API
   Gateway (HTTP API) + AWS Lambda** with **least-privilege IAM**. The Lambda
-  builds a context-grounded system prompt and returns a short, 10-foot answer.
-  Live in the demo — the app receives real model answers (`fromFallback:false`).
+  builds a context-grounded system prompt, attaches the last few real frames
+  (from S3) up to the playback position, and returns a short, 10-foot answer.
+  Live in the demo — every answer is a real model answer.
 - No AWS credentials ever ship in the TV app; Bedrock is only called server-side.
-  A deterministic seeded fallback (mirrored client + server) keeps the app
-  answering if the model or network is unavailable.
+  If the model or network is unavailable the app says so — it never shows a
+  canned answer.
 
 ## Challenges we ran into
 
@@ -87,16 +88,16 @@ Vega is a young platform, and building correctly meant discovering its edges
 ## Accomplishments we're proud of
 
 - A **working, platform-correct** Vega app verified on the Vega Virtual Device.
-- A **live, deployed** Bedrock integration (not mocked) with graceful fallback.
+- A **live, deployed** Bedrock integration (not mocked) that fails honestly instead of inventing answers.
 - A genuinely new interaction: **talking to the timeline** — ask, navigate,
-  revisit — plus proactive insights and a real accessibility story.
+  revisit — plus answers grounded in the real frames and a real accessibility story.
 
 ## What we learned
 
 How to build *with* Vega's constraints rather than against them — W3C media,
 the system-keyboard voice path, VoiceView for output — and how to keep an
 on-device AI experience resilient (grounded prompts, explicit `maxTokens`,
-adaptive retry, mirrored fallback).
+adaptive retry, hard timeouts, honest errors).
 
 ## What's next
 

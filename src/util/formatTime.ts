@@ -1,6 +1,8 @@
 /** Format seconds as m:ss (or h:mm:ss for long content). */
 export const formatTime = (s: number): string => {
-  if (!isFinite(s) || s < 0) s = 0;
+  if (!isFinite(s) || s < 0) {
+    s = 0;
+  }
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = Math.floor(s % 60);

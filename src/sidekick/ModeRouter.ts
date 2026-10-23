@@ -1,4 +1,9 @@
-import { AskRequest, AskTurn, CatalogItem, SideKickMode } from '@sidekick/data/types';
+import {
+  AskRequest,
+  AskTurn,
+  CatalogItem,
+  SideKickMode,
+} from '@sidekick/data/types';
 
 /**
  * ModeRouter — the heart of SideKick's "context awareness".
@@ -46,5 +51,9 @@ export const videoIdFor = (url: string): string =>
  */
 export const suggestedPrompts = (mode: SideKickMode): string[] =>
   mode === 'sports'
-    ? ['Catch me up', 'What\'s the score?', 'Who\'s winning?']
-    : ['What happened last episode?', 'What\'s this show about?', 'Who are the main characters?'];
+    ? ['Catch me up', "What's the score?", "Who's winning?"]
+    : [
+        "What's happening right now?",
+        "What's this about?",
+        'Who are the main characters?',
+      ];

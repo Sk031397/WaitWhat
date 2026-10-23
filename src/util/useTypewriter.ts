@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 /**
  * useTypewriter — progressively reveals `full` text, so an AI answer "types in"
@@ -12,7 +12,11 @@ import { useEffect, useRef, useState } from 'react';
  * Returns the revealed substring and whether it's still revealing. Reveal
  * restarts whenever `full` changes (new answer).
  */
-export const useTypewriter = (full: string, enabled = true, msPerStep = 18): {
+export const useTypewriter = (
+  full: string,
+  enabled = true,
+  msPerStep = 18,
+): {
   shown: string;
   done: boolean;
 } => {
@@ -32,15 +36,19 @@ export const useTypewriter = (full: string, enabled = true, msPerStep = 18): {
       i += step;
       if (i >= full.length) {
         setShown(full);
-        if (timer.current) clearInterval(timer.current);
+        if (timer.current) {
+          clearInterval(timer.current);
+        }
       } else {
         setShown(full.slice(0, i));
       }
     }, msPerStep);
     return () => {
-      if (timer.current) clearInterval(timer.current);
+      if (timer.current) {
+        clearInterval(timer.current);
+      }
     };
   }, [full, enabled, msPerStep]);
 
-  return { shown, done: shown.length >= full.length };
+  return {shown, done: shown.length >= full.length};
 };

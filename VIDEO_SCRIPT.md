@@ -69,12 +69,11 @@ MODE". Ask **"Catch me up."** Live answer grounded on the game.
 
 ---
 
-## 2:00–2:20 · ANTICIPATES + REVISIT THE TIMELINE  (≈50 words)
+## 2:00–2:20 · SEES THE SCREEN + REVISIT THE TIMELINE  (≈50 words)
 
-`[ACTION]` On a show, let it reach a scene moment — a **✨ SCENE INSIGHT** card
-appears unprompted.
+`[ACTION]` On Tears of Steel, ask "what's happening right now?".
 
-> "It also anticipates — surfacing a scene insight without me even asking."
+> "It's looking at the actual frames up to where I am — not guessing, no spoilers."
 
 `[ACTION]` Open controls, focus the **"Your questions:"** chips, select an
 earlier one — it jumps back and re-shows that answer.
@@ -111,7 +110,7 @@ earlier one — it jumps back and re-shows that answer.
 | Live AI + anchor | 0:50 | keep |
 | NL navigation | 1:30 | keep (signature) |
 | Sports mode | 2:00 | keep |
-| Anticipates + revisit | 2:20 | keep |
+| Sees the screen + revisit | 2:20 | keep |
 | Under the hood | 2:38 | **cut first** |
 | Close | 2:45 | keep |
 

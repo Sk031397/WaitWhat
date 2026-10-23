@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useMemo, useRef, useState, useCallback } from 'react';
-import { CatalogItem, SideKickMode, AskMarker, SideKickAnswer } from '@sidekick/data/types';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
+import {
+  CatalogItem,
+  SideKickMode,
+  AskMarker,
+  SideKickAnswer,
+} from '@sidekick/data/types';
 
 /**
  * VideoContext is the "context capture" layer of SideKick: what is on screen,
@@ -21,16 +33,20 @@ interface VideoContextValue {
 
   /** Navigable Q&A timeline. */
   askMarkers: AskMarker[];
-  addAskMarker: (positionSeconds: number, mode: SideKickMode, answer?: SideKickAnswer) => void;
+  addAskMarker: (
+    positionSeconds: number,
+    mode: SideKickMode,
+    answer?: SideKickAnswer,
+  ) => void;
   /** Select a marker: requests a seek to its time + re-surface of its answer. */
   selectMarker: (markerId: string) => void;
   /** Request a direct seek to an absolute time (natural-language seek). */
   requestSeek: (seconds: number) => void;
 
   /** Seek request (seconds) + a token that changes each request. */
-  seekRequest: { seconds: number; token: number } | null;
+  seekRequest: {seconds: number; token: number} | null;
   /** Answer to re-surface + a token that changes each request. */
-  resurface: { answer: SideKickAnswer; token: number } | null;
+  resurface: {answer: SideKickAnswer; token: number} | null;
 
   snapshot: () => {
     item: CatalogItem | null;
@@ -44,13 +60,21 @@ const VideoContext = createContext<VideoContextValue | null>(null);
 export const deriveMode = (item: CatalogItem | null): SideKickMode =>
   item?.contentType === 'sports' ? 'sports' : 'general';
 
-export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const VideoProvider: React.FC<{children: React.ReactNode}> = ({
+  children,
+}) => {
   const [current, setCurrentState] = useState<CatalogItem | null>(null);
   const [positionSeconds, setPositionSeconds] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [askMarkers, setAskMarkers] = useState<AskMarker[]>([]);
-  const [seekRequest, setSeekRequest] = useState<{ seconds: number; token: number } | null>(null);
-  const [resurface, setResurface] = useState<{ answer: SideKickAnswer; token: number } | null>(null);
+  const [seekRequest, setSeekRequest] = useState<{
+    seconds: number;
+    token: number;
+  } | null>(null);
+  const [resurface, setResurface] = useState<{
+    answer: SideKickAnswer;
+    token: number;
+  } | null>(null);
 
   const positionRef = useRef(0);
   const currentRef = useRef<CatalogItem | null>(null);
@@ -74,7 +98,12 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addAskMarker = useCallback(
     (pos: number, mode: SideKickMode, answer?: SideKickAnswer) => {
-      const marker: AskMarker = { id: `${Date.now()}-${pos}`, positionSeconds: pos, mode, answer };
+      const marker: AskMarker = {
+        id: `${Date.now()}-${pos}`,
+        positionSeconds: pos,
+        mode,
+        answer,
+      };
       markersRef.current = [...markersRef.current, marker];
       setAskMarkers(markersRef.current);
     },
@@ -83,15 +112,19 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const selectMarker = useCallback((markerId: string) => {
     const mk = markersRef.current.find((m) => m.id === markerId);
-    if (!mk) return;
+    if (!mk) {
+      return;
+    }
     tokenRef.current += 1;
-    setSeekRequest({ seconds: mk.positionSeconds, token: tokenRef.current });
-    if (mk.answer) setResurface({ answer: mk.answer, token: tokenRef.current });
+    setSeekRequest({seconds: mk.positionSeconds, token: tokenRef.current});
+    if (mk.answer) {
+      setResurface({answer: mk.answer, token: tokenRef.current});
+    }
   }, []);
 
   const requestSeek = useCallback((seconds: number) => {
     tokenRef.current += 1;
-    setSeekRequest({ seconds: Math.max(0, seconds), token: tokenRef.current });
+    setSeekRequest({seconds: Math.max(0, seconds), token: tokenRef.current});
   }, []);
 
   const snapshot = useCallback(
@@ -120,16 +153,30 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       snapshot,
     }),
     [
-      current, positionSeconds, durationSeconds, askMarkers, seekRequest, resurface,
-      setCurrent, setProgress, addAskMarker, selectMarker, requestSeek, snapshot,
+      current,
+      positionSeconds,
+      durationSeconds,
+      askMarkers,
+      seekRequest,
+      resurface,
+      setCurrent,
+      setProgress,
+      addAskMarker,
+      selectMarker,
+      requestSeek,
+      snapshot,
     ],
   );
 
-  return <VideoContext.Provider value={value}>{children}</VideoContext.Provider>;
+  return (
+    <VideoContext.Provider value={value}>{children}</VideoContext.Provider>
+  );
 };
 
 export const useVideoContext = (): VideoContextValue => {
   const ctx = useContext(VideoContext);
-  if (!ctx) throw new Error('useVideoContext must be used within a VideoProvider');
+  if (!ctx) {
+    throw new Error('useVideoContext must be used within a VideoProvider');
+  }
   return ctx;
 };

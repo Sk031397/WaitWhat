@@ -28,7 +28,7 @@ exactly what's playing and where you are in it.
 The bigger idea: **the timeline should be something you can talk to** — not a
 chat window bolted onto a video, but a companion that understands the content,
 anchors every answer to the moment you asked, lets you navigate by plain language
-("take me to the middle"), and proactively surfaces what matters.
+("take me to the middle"), and sees the actual frames on screen.
 
 ### What it does
 While a show plays full-screen (playback never stops):
@@ -45,7 +45,9 @@ While a show plays full-screen (playback never stops):
   Bedrock answers on the game context (teams, venue, situation) so "catch me up"
   / "what's the score" answer in the moment. Teams/players are fictional over our
   own license-clear footage.
-- **It anticipates** — proactive scene insights surface without being asked.
+- **It sees the screen** — every question carries real frames from the video up
+  to your position, so "what's happening right now?" is answered from the
+  footage itself (and it can't spoil what's ahead).
 - **It's accessible** — answers are announced through **VoiceView** for
   low-vision viewers.
 
@@ -56,10 +58,11 @@ While a show plays full-screen (playback never stops):
   API over `VideoPlayer` + `KeplerVideoSurfaceView`. Vega-native navigation,
   accessible 10-foot focus (border + scale, never color alone), dependency-free
   gradient/vignette. Voice input via the supported system-keyboard mic path.
-- **Backend (AWS Builder).** **Amazon Bedrock Nova Micro** via the Converse API
+- **Backend (AWS Builder).** **Amazon Bedrock Nova Lite** (multimodal) via the Converse API
   behind **API Gateway (HTTP API) + Lambda** with **least-privilege IAM**;
-  context-grounded prompt, live (`fromFallback:false`). No AWS credentials ship
-  in the TV app; a mirrored seeded fallback keeps it answering offline.
+  context-grounded prompt plus the last real frames (from S3) up to the playback
+  position. No AWS credentials ship in the TV app; if the model is unreachable
+  the app says so instead of showing a canned answer.
 
 ### Challenges we ran into
 Vega is a young platform (full detail in our friction log): no app-level STT (we
@@ -71,15 +74,15 @@ instantly).
 
 ### Accomplishments we're proud of
 A working, platform-correct Vega app verified on the Vega Virtual Device; a live,
-deployed Bedrock integration (not mocked) with graceful fallback; and a genuinely
+deployed Bedrock integration (not mocked) that fails honestly instead of inventing answers; and a genuinely
 new interaction — talking to the timeline (ask, navigate, revisit) — plus
-proactive insights and a real accessibility story.
+answers grounded in the real frames and a real accessibility story.
 
 ### What we learned
 How to build *with* Vega's constraints rather than against them (W3C media, the
 system-keyboard voice path, VoiceView), and how to keep an on-device AI
 experience resilient (grounded prompts, explicit `maxTokens`, adaptive retry,
-mirrored fallback).
+hard timeouts, honest errors).
 
 ### What's next
 Real detected scene boundaries for proactivity; a first-class "Describe this
@@ -121,8 +124,9 @@ AWS Builder
   and deploy to the Vega Virtual Device.
 - Vega manifest services — media, audio, network, and the system IME
   (`com.amazon.inputmethod.service`) for the keyboard-mic voice path.
-- **Amazon Bedrock (Nova Micro)** via `@aws-sdk/client-bedrock-runtime` Converse
-  API — the grounded Q&A answers.
+- **Amazon Bedrock (Nova Lite)** via `@aws-sdk/client-bedrock-runtime` Converse
+  API — the grounded Q&A answers, with real video frames as input.
+- **Amazon S3** — hosts the sports clips and the extracted video frames.
 - **AWS Lambda + API Gateway (HTTP API) + IAM** — the serverless `/ask` endpoint
   with least-privilege permissions.
 - **VoiceView** (via `AccessibilityInfo.announceForAccessibility`) — spoken

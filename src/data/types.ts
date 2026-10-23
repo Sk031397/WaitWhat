@@ -25,7 +25,6 @@ export interface CatalogItem {
   releaseYear?: number;
   /** Display rating, e.g. "8.7" or "LIVE". */
   rating?: string;
-
 }
 
 export type SideKickMode = 'general' | 'sports';

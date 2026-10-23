@@ -7,6 +7,6 @@
             "@sidekick/*": ["src/*"]
         }
     },
-    "include": ["src", "index.js"],
+    "include": ["src", "test", "index.js"],
     "exclude": ["node_modules", "backend", "dist", "build"]
 }

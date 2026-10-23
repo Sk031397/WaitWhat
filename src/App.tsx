@@ -1,9 +1,9 @@
 import React from 'react';
-import { createStackNavigator } from '@amazon-devices/react-navigation__stack';
-import { NavigationContainer } from '@amazon-devices/react-navigation__native';
-import { HomeScreen } from '@sidekick/screens/HomeScreen';
-import { PlayerScreen } from '@sidekick/screens/PlayerScreen';
-import { RootStackParamList } from '@sidekick/navigation/types';
+import {createStackNavigator} from '@amazon-devices/react-navigation__stack';
+import {NavigationContainer} from '@amazon-devices/react-navigation__native';
+import {HomeScreen} from '@sidekick/screens/HomeScreen';
+import {PlayerScreen} from '@sidekick/screens/PlayerScreen';
+import {RootStackParamList} from '@sidekick/navigation/types';
 
 /**
  * SideKick app shell.
@@ -17,7 +17,6 @@ import { RootStackParamList } from '@sidekick/navigation/types';
  * it defensively — the app works without it.
  */
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const screens = require('@amazon-devices/react-native-screens');
   screens.enableScreens?.();
   screens.enableFreeze?.();
@@ -31,13 +30,12 @@ const App: React.FC = () => (
   <NavigationContainer>
     <Stack.Navigator
       initialRouteName="Home"
-      screenOptions={{ headerShown: false }}
-    >
+      screenOptions={{headerShown: false}}>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Player" component={PlayerScreen} />
     </Stack.Navigator>
   </NavigationContainer>
 );
 
-export { App };
+export {App};
 export default App;

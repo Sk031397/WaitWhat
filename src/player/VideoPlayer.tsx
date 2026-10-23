@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { VideoPlayer as W3CVideoPlayer } from '@amazon-devices/react-native-w3cmedia/dist/headless';
-import { KeplerVideoSurfaceView } from '@amazon-devices/react-native-w3cmedia';
+import React, {useEffect, useRef, useCallback} from 'react';
+import {View, StyleSheet, ViewStyle, StyleProp} from 'react-native';
+import {VideoPlayer as W3CVideoPlayer} from '@amazon-devices/react-native-w3cmedia/dist/headless';
+import {KeplerVideoSurfaceView} from '@amazon-devices/react-native-w3cmedia';
 
 /**
  * VideoPlayer — a thin wrapper over the Vega W3C media stack that exposes a
@@ -28,14 +28,14 @@ export interface OnProgressData {
 
 export interface VideoPlayerProps {
   /** react-native-video style source. */
-  source: { uri: string };
+  source: {uri: string};
   /** When true, playback is paused. */
   paused?: boolean;
   /** Start playing automatically once ready. */
   autoplay?: boolean;
   style?: StyleProp<ViewStyle>;
   /** Fired once metadata (duration) is known. */
-  onLoad?: (data: { duration: number }) => void;
+  onLoad?: (data: {duration: number}) => void;
   /** Fired on timeupdate with current position. */
   onProgress?: (data: OnProgressData) => void;
   /** Fired when playback reaches the end. */
@@ -71,26 +71,33 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const sourceUriRef = useRef(source.uri);
   const autoplayRef = useRef(autoplay);
   const pausedRef = useRef(paused);
-  const cbRef = useRef({ onLoad, onProgress, onEnd, onError, onReady });
+  const cbRef = useRef({onLoad, onProgress, onEnd, onError, onReady});
   useEffect(() => {
     sourceUriRef.current = source.uri;
     autoplayRef.current = autoplay;
     pausedRef.current = paused;
-    cbRef.current = { onLoad, onProgress, onEnd, onError, onReady };
+    cbRef.current = {onLoad, onProgress, onEnd, onError, onReady};
   });
 
   // ----- W3C event handlers (stable) -----
   const handleLoadedMetadata = useCallback(() => {
     const p = player.current;
-    if (!p) return;
-    cbRef.current.onLoad?.({ duration: p.duration ?? 0 });
+    if (!p) {
+      return;
+    }
+    cbRef.current.onLoad?.({duration: p.duration ?? 0});
     if (autoplayRef.current && !pausedRef.current) {
       void Promise.resolve(p.play()).catch(() => undefined);
     }
   }, []);
   const handleTimeUpdate = useCallback(() => {
     const p = player.current;
-    if (p) cbRef.current.onProgress?.({ currentTime: p.currentTime ?? 0, duration: p.duration ?? 0 });
+    if (p) {
+      cbRef.current.onProgress?.({
+        currentTime: p.currentTime ?? 0,
+        duration: p.duration ?? 0,
+      });
+    }
   }, []);
   const handleEnded = useCallback(() => cbRef.current.onEnd?.(), []);
   const handleError = useCallback(() => {
@@ -101,9 +108,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Load current source exactly once per unique URI.
   const loadCurrentSource = useCallback(() => {
     const p = player.current;
-    if (!p || !initialized.current) return;
+    if (!p || !initialized.current) {
+      return;
+    }
     const uri = sourceUriRef.current;
-    if (loadedSrc.current === uri) return; // already loaded this source
+    if (loadedSrc.current === uri) {
+      return;
+    } // already loaded this source
     loadedSrc.current = uri;
     p.autoplay = false; // we drive play() on loadedmetadata, never autoplay
     p.src = uri;
@@ -111,38 +122,53 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, []);
 
   // ----- Surface lifecycle (stable callbacks — empty deps) ----
-  const onSurfaceViewCreated = useCallback(async (surfaceHandle: string) => {
-    surfaceHandleRef.current = surfaceHandle;
-    if (!player.current) player.current = new W3CVideoPlayer();
-    const p = player.current;
+  const onSurfaceViewCreated = useCallback(
+    async (surfaceHandle: string) => {
+      surfaceHandleRef.current = surfaceHandle;
+      if (!player.current) {
+        player.current = new W3CVideoPlayer();
+      }
+      const p = player.current;
 
-    // Guard against concurrent/duplicate initialize() calls.
-    if (!initialized.current && !initializing.current) {
-      initializing.current = true;
-      try {
-        await p.initialize();
-        initialized.current = true;
-        p.addEventListener('loadedmetadata', handleLoadedMetadata);
-        p.addEventListener('timeupdate', handleTimeUpdate);
-        p.addEventListener('ended', handleEnded);
-        p.addEventListener('error', handleError);
-        cbRef.current.onReady?.(p);
-      } catch {
+      // Guard against concurrent/duplicate initialize() calls.
+      if (!initialized.current && !initializing.current) {
+        initializing.current = true;
+        try {
+          await p.initialize();
+          initialized.current = true;
+          p.addEventListener('loadedmetadata', handleLoadedMetadata);
+          p.addEventListener('timeupdate', handleTimeUpdate);
+          p.addEventListener('ended', handleEnded);
+          p.addEventListener('error', handleError);
+          cbRef.current.onReady?.(p);
+        } catch {
+          initializing.current = false;
+          return;
+        }
         initializing.current = false;
+      }
+
+      if (!initialized.current) {
         return;
       }
-      initializing.current = false;
-    }
-
-    if (!initialized.current) return;
-    // Attach surface after initialize() resolved, then load once.
-    p.setSurfaceHandle(surfaceHandle);
-    loadCurrentSource();
-  }, [handleLoadedMetadata, handleTimeUpdate, handleEnded, handleError, loadCurrentSource]);
+      // Attach surface after initialize() resolved, then load once.
+      p.setSurfaceHandle(surfaceHandle);
+      loadCurrentSource();
+    },
+    [
+      handleLoadedMetadata,
+      handleTimeUpdate,
+      handleEnded,
+      handleError,
+      loadCurrentSource,
+    ],
+  );
 
   const onSurfaceViewDestroyed = useCallback((surfaceHandle: string) => {
     const p = player.current;
-    if (!p) return;
+    if (!p) {
+      return;
+    }
     try {
       p.pause();
     } catch {
@@ -162,9 +188,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // ----- React to `paused` prop -----
   useEffect(() => {
     const p = player.current;
-    if (!p || !initialized.current) return;
-    if (paused) p.pause();
-    else void Promise.resolve(p.play()).catch(() => undefined);
+    if (!p || !initialized.current) {
+      return;
+    }
+    if (paused) {
+      p.pause();
+    } else {
+      void Promise.resolve(p.play()).catch(() => undefined);
+    }
   }, [paused]);
 
   // ----- React to source change: load the new source once -----
@@ -176,7 +207,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     return () => {
       const p = player.current;
-      if (!p) return;
+      if (!p) {
+        return;
+      }
       try {
         p.pause();
         p.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -185,9 +218,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         p.removeEventListener('error', handleError);
         // Prefer synchronous deinit (reference pattern) to avoid a dangling
         // async teardown racing a fresh mount.
-        const anyP = p as unknown as { deinitializeSync?: (t: number) => string; deinitialize?: () => Promise<void> };
-        if (typeof anyP.deinitializeSync === 'function') anyP.deinitializeSync(1500);
-        else void anyP.deinitialize?.();
+        const anyP = p as unknown as {
+          deinitializeSync?: (t: number) => string;
+          deinitialize?: () => Promise<void>;
+        };
+        if (typeof anyP.deinitializeSync === 'function') {
+          anyP.deinitializeSync(1500);
+        } else {
+          void anyP.deinitialize?.();
+        }
       } catch {
         // best-effort
       }
@@ -212,6 +251,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
-  surface: { flex: 1 },
+  container: {flex: 1, backgroundColor: '#000000'},
+  surface: {flex: 1},
 });

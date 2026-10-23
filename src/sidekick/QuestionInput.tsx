@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { SideKickMode } from '@sidekick/data/types';
-import { theme } from '@sidekick/theme';
+import React, {useRef, useState} from 'react';
+import {View, Text, TextInput, Pressable, StyleSheet} from 'react-native';
+import {SideKickMode} from '@sidekick/data/types';
+import {theme} from '@sidekick/theme';
 
 /**
  * QuestionInput — SideKick's voice/text entry.
@@ -24,7 +24,10 @@ interface QuestionInputProps {
   onSubmit: (question: string) => void;
 }
 
-export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) => {
+export const QuestionInput: React.FC<QuestionInputProps> = ({
+  mode,
+  onSubmit,
+}) => {
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [askFocused, setAskFocused] = useState(false);
@@ -33,7 +36,9 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
 
   const submit = () => {
     const q = value.trim();
-    if (!q) return;
+    if (!q) {
+      return;
+    }
     onSubmit(q);
     setValue('');
   };
@@ -43,11 +48,10 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
       <View
         style={[
           styles.inputRow,
-          { borderColor: accent },
+          {borderColor: accent},
           focused && styles.inputRowFocused,
-        ]}
-      >
-        <View style={[styles.dot, { backgroundColor: accent }]} />
+        ]}>
+        <View style={[styles.dot, {backgroundColor: accent}]} />
         <TextInput
           ref={inputRef}
           style={styles.input}
@@ -69,8 +73,11 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
         onBlur={() => setAskFocused(false)}
         accessibilityRole="button"
         accessibilityLabel="Ask Wait, What?"
-        style={[styles.askBtn, { backgroundColor: accent }, askFocused && styles.askBtnFocused]}
-      >
+        style={[
+          styles.askBtn,
+          {backgroundColor: accent},
+          askFocused && styles.askBtnFocused,
+        ]}>
         <Text style={styles.askBtnText}>Ask</Text>
       </Pressable>
     </View>
@@ -78,7 +85,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({ mode, onSubmit }) 
 };
 
 const styles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center' },
+  wrap: {flexDirection: 'row', alignItems: 'center'},
   inputRow: {
     flex: 1,
     flexDirection: 'row',
@@ -89,7 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceSolid,
     marginEnd: theme.spacing.sm,
   },
-  inputRowFocused: { borderWidth: 4 },
+  inputRowFocused: {borderWidth: 4},
   dot: {
     width: theme.spacing.sm,
     height: theme.spacing.sm,
@@ -111,7 +118,7 @@ const styles = StyleSheet.create({
   },
   askBtnFocused: {
     borderColor: theme.colors.focusBorder,
-    transform: [{ scale: 1.06 }],
+    transform: [{scale: 1.06}],
   },
-  askBtnText: { color: '#000000', fontSize: theme.font.body, fontWeight: '700' },
+  askBtnText: {color: '#000000', fontSize: theme.font.body, fontWeight: '700'},
 });

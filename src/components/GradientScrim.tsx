@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import React, {useMemo} from 'react';
+import {View, StyleSheet, ViewStyle, StyleProp} from 'react-native';
 
 /**
  * GradientScrim — a smooth gradient fake, built from a stack of stepped-opacity
@@ -30,7 +30,9 @@ interface GradientScrimProps {
 const toRgba = (hex: string, a: number): string => {
   // Accept #RRGGBB; fall back to black.
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return `rgba(8,9,13,${a})`;
+  if (!m) {
+    return `rgba(8,9,13,${a})`;
+  }
   const n = parseInt(m[1], 16);
   const r = (n >> 16) & 255;
   const g = (n >> 8) & 255;
@@ -49,12 +51,12 @@ export const GradientScrim: React.FC<GradientScrimProps> = ({
   const reverse = direction === 'to-top' || direction === 'to-left';
 
   const segments = useMemo(() => {
-    const arr: { a: number }[] = [];
+    const arr: {a: number}[] = [];
     for (let i = 0; i < bands; i++) {
       const t = i / (bands - 1); // 0..1 across bands
       // easeInQuad for a soft ramp into the solid end
       const eased = t * t;
-      arr.push({ a: eased * intensity });
+      arr.push({a: eased * intensity});
     }
     return reverse ? arr.reverse() : arr;
   }, [bands, intensity, reverse]);
@@ -65,7 +67,7 @@ export const GradientScrim: React.FC<GradientScrimProps> = ({
         {segments.map((seg, i) => (
           <View
             key={i}
-            style={[styles.band, { backgroundColor: toRgba(color, seg.a) }]}
+            style={[styles.band, {backgroundColor: toRgba(color, seg.a)}]}
           />
         ))}
       </View>
@@ -74,8 +76,8 @@ export const GradientScrim: React.FC<GradientScrimProps> = ({
 };
 
 const styles = StyleSheet.create({
-  fill: { ...StyleSheet.absoluteFillObject },
-  col: { flex: 1, flexDirection: 'column' },
-  row: { flex: 1, flexDirection: 'row' },
-  band: { flex: 1 },
+  fill: {...StyleSheet.absoluteFillObject},
+  col: {flex: 1, flexDirection: 'column'},
+  row: {flex: 1, flexDirection: 'row'},
+  band: {flex: 1},
 });

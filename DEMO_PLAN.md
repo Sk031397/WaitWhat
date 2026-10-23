@@ -10,15 +10,15 @@ Panel to play to: Fire TV **Voice & AI** leads, the **NBA / sports** PM, and
 headline moments:
 1. **Talk to your timeline** — ask, then navigate by natural language, then
    revisit any question on the scrubber (Idea — your signature).
-2. **Live Bedrock answer** (real, `fromFallback:false`) — Tech.
+2. **Live Bedrock answer** (real model answer, never canned) — Tech.
 3. **Context-aware sports mode** — open a game and Wait, What? re-themes and
    answers "catch me up" / "what's the score" grounded on the game (Idea + sports).
-4. **It anticipates on anything** — a proactive scene insight on a show, too (Idea).
+4. **It sees the screen** — "what's happening right now?" answered from the real frames (Idea + multi-modal).
 5. **Accessible by design** — answers spoken via VoiceView for low-vision
    viewers; non-blocking, platform-correct (Design/Impact).
 
 > NOTE: Wait, What? has two modes from one gesture. **Companion mode** (shows/movies)
-> answers anything + proactive scene insights. **Sports mode** (a "Live Sports"
+> answers anything, grounded on the real frames. **Sports mode** (a "Live Sports"
 > row of 9 games) re-themes and grounds its live Bedrock answers on the game
 > context (teams, venue, situation). All teams/players are **made-up** (no real
 > leagues/trademarks) over **real, license-clear sports footage** the team hosts
@@ -31,8 +31,9 @@ headline moments:
 
 - [ ] **Real content** swapped into `src/data/catalog.ts` → `MEDIA` (poster art +
       your own clips). Test each plays on the sim. Biggest visual-quality lever.
-- [ ] Live backend confirmed: `curl` the endpoint and verify `"fromFallback":false`.
-      (Live on Amazon Bedrock Nova Micro via API Gateway + Lambda; `ASK_ENDPOINT`
+- [ ] Live backend confirmed: `curl` the endpoint and verify it returns `{"text": ...}`
+      (with the `x-ww-key` header from `src/secrets.ts`).
+      (Live on Amazon Bedrock Nova Lite via API Gateway + Lambda; `ASK_ENDPOINT`
       is already wired in `src/config.ts`.)
 - [ ] `npm run build:debug` then `vega run-app build/x86_64-debug/sidekick_x86_64.vpkg`
 - [ ] Virtual device started **with GUI**: `vega virtual-device start --gui`
@@ -82,11 +83,10 @@ Bedrock answer grounded on the game context (teams, venue, situation).
 nine sports total: basketball, football, hockey, soccer, tennis, boxing, wrestling,
 baseball, and rowing.)
 
-### It anticipates on a show too (proactive scene insight)
-Open a show and let it reach a scene moment — a **✨ SCENE INSIGHT** card surfaces
-unprompted.
-> "And I didn't even ask — Wait, What? noticed the scene turn and surfaced what's
->  happening. It anticipates, not just answers."
+### It sees the screen
+Open Tears of Steel, let it play a little, and ask "what's happening right now?".
+> "It isn't guessing from a synopsis — it's looking at the actual frames up to
+>  where I am, so it can't spoil what's ahead."
 
 ### 2:00–2:20 — Revisit the timeline (navigable Q&A)
 Open the controls; focus the **"Your questions:"** chips. Select an earlier one.
@@ -110,7 +110,7 @@ Home, one clean focus sweep.
 
 ## Lines that score points
 - "without pausing" — say it twice; it's the design thesis.
-- "live Amazon Bedrock call" — you earned it; it's real (`fromFallback:false`).
+- "live Amazon Bedrock call" — you earned it; it's real (no canned answers).
 - "it understands and takes me there" — the navigation beat.
 - "jumps back to that moment and brings the answer with it" — the navigable timeline.
 - "announced through VoiceView for low-vision viewers" — the accessibility impact.
@@ -130,8 +130,8 @@ Home, one clean focus sweep.
 ## Fallback if something misbehaves on the day
 - **Video black?** Almost always the clip/codec, not the app — point that item's
   `video` in `MEDIA` at the known-good Sintel URL and rebuild.
-- **Answer shows "offline answer"?** The backend/network hiccuped; the seeded
-  fallback answered. Re-try; if persistent, don't claim "live" for that take.
+- **Answer says "Couldn't reach Wait, What?"?** The backend/network hiccuped.
+  Re-try; if persistent, check the key in `src/secrets.ts` matches the Lambda.
 - **Navigation didn't jump?** Fractional phrases ("the middle/end/quarter") need
   the clip's duration to be loaded — give it a second after opening the player,
   then ask. Explicit times ("0:10") work immediately.
