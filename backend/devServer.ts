@@ -4,7 +4,7 @@ import { handler } from './handler';
 /**
  * Local dev server for the SideKick /ask endpoint. Wraps the Lambda handler
  * so you can test end-to-end against real Bedrock (with AWS creds in your
- * shell) or exercise the seeded fallback offline.
+ * shell).
  *
  *   npm run dev        # starts on http://localhost:3000/ask
  *
@@ -16,7 +16,7 @@ const server = http.createServer((reqHttp, res) => {
   if (reqHttp.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, x-ww-key',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
     });
     res.end();
@@ -32,7 +32,7 @@ const server = http.createServer((reqHttp, res) => {
   let body = '';
   reqHttp.on('data', (chunk) => (body += chunk));
   reqHttp.on('end', async () => {
-    const result = await handler({ body });
+    const result = await handler({ body, headers: reqHttp.headers as Record<string, string> });
     res.writeHead(result.statusCode, result.headers);
     res.end(result.body);
   });

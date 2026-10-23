@@ -1,14 +1,25 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  SideKick /ask endpoint — a Lambda behind a Function URL that grounds Amazon
-  Bedrock (Nova) with viewing context and returns 10-foot-friendly answers.
+  SideKick /ask endpoint — a Lambda behind an API Gateway HTTP API that grounds
+  Amazon Bedrock (Nova) with viewing context and returns 10-foot-friendly
+  answers. (Public Lambda Function URLs are blocked on our account, so the
+  live deployment uses an HTTP API; this template mirrors that.)
 
 Parameters:
   BedrockModelId:
     Type: String
+    # Must be multimodal (Lite/Pro): the model reads real video frames.
     Default: us.amazon.nova-lite-v1:0
     Description: Bedrock model / inference profile id used by Converse.
+  MediaBucket:
+    Type: String
+    Default: sidekickvegaos
+    Description: Bucket holding frames/<videoId>/<second>.jpg (scripts/extract-frames.sh).
+  AskApiKey:
+    Type: String
+    NoEcho: true
+    Description: Shared key the app sends in x-ww-key (must match src/config.ts).
 
 Globals:
   Function:
@@ -17,21 +28,37 @@ Globals:
     Runtime: nodejs20.x
 
 Resources:
+  AskApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # Cost guard: the endpoint is public, so cap request rate per route.
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 5
+        ThrottlingBurstLimit: 10
+      CorsConfiguration:
+        AllowOrigins: ['*']
+        AllowMethods: ['POST', 'OPTIONS']
+        AllowHeaders: ['content-type', 'x-ww-key']
+
   AskFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: handler.handler
       CodeUri: dist/
+      # Hard ceiling on concurrent Bedrock calls even if throttling is bypassed.
+      ReservedConcurrentExecutions: 5
       Environment:
         Variables:
           BEDROCK_MODEL_ID: !Ref BedrockModelId
-      # Function URL gives us a public HTTPS endpoint with no API Gateway.
-      FunctionUrlConfig:
-        AuthType: NONE
-        Cors:
-          AllowOrigins: ['*']
-          AllowMethods: ['POST', 'OPTIONS']
-          AllowHeaders: ['content-type']
+          ASK_API_KEY: !Ref AskApiKey
+          MEDIA_BUCKET: !Ref MediaBucket
+      Events:
+        Ask:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AskApi
+            Path: /ask
+            Method: POST
       Policies:
         # Least-privilege: only Converse on the Nova model family.
         - Statement:
@@ -42,8 +69,12 @@ Resources:
               Resource:
                 - !Sub 'arn:aws:bedrock:*::foundation-model/amazon.nova-*'
                 - !Sub 'arn:aws:bedrock:*:*:inference-profile/*nova*'
+            # Read-only access to the extracted frames, nothing else in the bucket.
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub 'arn:aws:s3:::${MediaBucket}/frames/*'
 
 Outputs:
   AskEndpoint:
-    Description: Call setAskEndpoint(this_url) in the app's bedrockClient.
-    Value: !GetAtt AskFunctionUrl.FunctionUrl
+    Description: Set as ASK_ENDPOINT in src/config.ts.
+    Value: !Sub 'https://${AskApi}.execute-api.${AWS::Region}.amazonaws.com/ask'

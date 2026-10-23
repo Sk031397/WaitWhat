@@ -1,17 +1,23 @@
-import { handler } from './handler';
 import type { AskRequest } from './types';
 
 /**
- * Lightweight test harness (no framework needed). Forces the Bedrock path to
+ * Lightweight test harness (no framework needed). Forces the Bedrock call to
  * fail deterministically (bogus model id + an unroutable endpoint, so the SDK
- * errors immediately instead of making real retried calls), so we exercise the
- * seeded fallback and assert the shape of each answer. Run: npm test
+ * errors immediately instead of making real calls), so we exercise request
+ * validation, auth, and the error path — which must never invent an answer.
+ * Run: npm test
  */
 process.env.BEDROCK_MODEL_ID = 'nonexistent.model';
 process.env.AWS_REGION = 'us-east-1';
 process.env.AWS_ENDPOINT_URL = 'http://127.0.0.1:1';
 process.env.AWS_ACCESS_KEY_ID = 'test';
 process.env.AWS_SECRET_ACCESS_KEY = 'test';
+
+/** Load a fresh handler so it re-reads env (e.g. ASK_API_KEY). */
+const loadHandler = async () => {
+  delete require.cache[require.resolve('./handler')];
+  return (await import('./handler')).handler;
+};
 
 let passed = 0;
 let failed = 0;
@@ -24,11 +30,6 @@ const assert = (cond: boolean, msg: string): void => {
     failed++;
     console.error(`  ✗ ${msg}`);
   }
-};
-
-const call = async (req: AskRequest) => {
-  const res = await handler({ body: JSON.stringify(req) });
-  return { status: res.statusCode, data: JSON.parse(res.body) };
 };
 
 const generalReq = (question: string): AskRequest => ({
@@ -44,7 +45,13 @@ const generalReq = (question: string): AskRequest => ({
 });
 
 const run = async () => {
-  console.log('SideKick backend tests (fallback path):');
+  console.log('SideKick backend tests (validation, auth, error path):');
+  delete process.env.ASK_API_KEY;
+  const handler = await loadHandler();
+  const call = async (req: unknown) => {
+    const res = await handler({ body: JSON.stringify(req) });
+    return { status: res.statusCode, data: JSON.parse(res.body) };
+  };
 
   // 1. Invalid body -> 400
   const bad = await handler({ body: 'not json' });
@@ -54,17 +61,16 @@ const run = async () => {
   const missing = await handler({ body: JSON.stringify({ mode: 'general' }) });
   assert(missing.statusCode === 400, 'missing content returns 400');
 
-  // 3. General "who" -> cast
-  const who = await call(generalReq('Who is in this scene?'));
-  assert(who.status === 200, 'general question returns 200');
-  assert(who.data.fromFallback === true, 'who question used fallback');
-  assert(who.data.text.includes('Lindqvist'), 'who answer includes cast member');
+  // 3. Blank question -> 400
+  const blank = await call(generalReq('   '));
+  assert(blank.status === 400, 'blank question returns 400');
 
-  // 4. Generic general -> synopsis
-  const generic = await call(generalReq('Tell me about this'));
-  assert(generic.data.text.includes('Northern Expanse'), 'generic answer references title');
+  // 4. Model unavailable -> error, never a made-up answer
+  const down = await call(generalReq('Who is in this scene?'));
+  assert(down.status === 503, 'model failure returns 503');
+  assert(down.data.text === undefined, 'model failure returns no answer text');
 
-  // 5. Sports mode still answers (no stat cards, just a grounded fallback)
+  // 5. Sports request validates and reaches the model (then fails the same way)
   const sports = await call({
     mode: 'sports',
     question: "What's the score?",
@@ -75,8 +81,23 @@ const run = async () => {
       positionSeconds: 120,
     },
   });
-  assert(sports.status === 200, 'sports question returns 200');
-  assert(typeof sports.data.text === 'string' && sports.data.text.length > 0, 'sports answer has text');
+  assert(sports.status === 503, 'sports request passes validation');
+
+  // 6. Hostile/oversized input is normalized, not rejected
+  const messy = await call({
+    ...generalReq('x'.repeat(5000)),
+    history: [{ question: 'Who is Elin?', answer: 'The lead scientist.' }, { bogus: true }],
+  });
+  assert(messy.status === 503, 'oversized question + junk history passes validation');
+
+  // 7. Shared key: enforced only when ASK_API_KEY is set
+  process.env.ASK_API_KEY = 'k';
+  const keyed = await loadHandler();
+  const body = JSON.stringify(generalReq('hi'));
+  const denied = await keyed({ body, headers: {} });
+  assert(denied.statusCode === 401, 'missing key returns 401');
+  const allowed = await keyed({ body, headers: { 'x-ww-key': 'k' } });
+  assert(allowed.statusCode !== 401, 'correct key is accepted');
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);

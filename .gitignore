@@ -30,3 +30,5 @@ npm-debug.log*
 # SAM
 .aws-sam/
 samconfig.toml
+frames-out/
+buildinfo.json

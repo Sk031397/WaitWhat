@@ -9,7 +9,7 @@ import {
   Platform,
   AccessibilityInfo,
 } from 'react-native';
-import { SideKickAnswer } from '@sidekick/data/types';
+import { AskTurn, SideKickAnswer } from '@sidekick/data/types';
 import { theme } from '@sidekick/theme';
 import { useVideoContext } from '@sidekick/player/useVideoContext';
 import { QuestionInput } from './QuestionInput';
@@ -19,6 +19,9 @@ import { formatTime } from '@sidekick/util/formatTime';
 import { parseSeekIntent, parseFractionalPhrase } from '@sidekick/util/parseTimePhrase';
 import { GradientScrim } from '@sidekick/components/GradientScrim';
 import { useTypewriter } from '@sidekick/util/useTypewriter';
+
+/** How many prior exchanges to send with a question. */
+const MAX_HISTORY_TURNS = 3;
 
 /**
  * SideKickOverlay — a SLIDE-OUT companion panel.
@@ -32,14 +35,14 @@ import { useTypewriter } from '@sidekick/util/useTypewriter';
  * lets the user hold the Alexa button and dictate — the only app-usable STT
  * path on VegaOS. The recognized/typed text is routed to Bedrock by mode.
  */
-export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = ({
-  proactive,
-}) => {
+export const SideKickOverlay: React.FC = () => {
   const { mode, snapshot, addAskMarker, resurface, requestSeek, durationSeconds } =
     useVideoContext();
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<SideKickAnswer | null>(null);
   const [tabFocused, setTabFocused] = useState(false);
+  // Last few live exchanges for the current title, so "who's he?" has context.
+  const history = useRef<{ itemId: string; turns: AskTurn[] }>({ itemId: '', turns: [] });
 
   // Panel slides along X. Starts fully off-screen (= panel width).
   const translateX = useRef(new Animated.Value(theme.overlayWidth)).current;
@@ -107,16 +110,6 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       `SideKick${where}: ${a.text}`,
     );
   }, []);
-
-  // When a proactive answer arrives (timestamp-triggered big play), surface it.
-  useEffect(() => {
-    if (proactive) {
-      setAnswer(proactive);
-      setOpen(true);
-      announce(proactive);
-      playAnswerIn();
-    }
-  }, [proactive, announce, playAnswerIn]);
 
   // When the user selects a timeline marker, re-surface that saved answer.
   useEffect(() => {
@@ -227,7 +220,14 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         jumpedToLabel,
       });
 
-      const req = buildAskRequest(snap.item, askedAtSeconds, snap.mode, question);
+      const req = buildAskRequest(
+        snap.item,
+        askedAtSeconds,
+        snap.mode,
+        question,
+        jumpedToSeconds !== null,
+        history.current.itemId === snap.item.id ? history.current.turns : [],
+      );
       const res = await ask(req);
 
       const finalAnswer: SideKickAnswer = {
@@ -235,7 +235,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
         mode: snap.mode,
         question,
         text: res.text,
-        fromFallback: res.fromFallback,
+        failed: res.failed,
         askedAtSeconds,
         askedAtLabel,
         jumpedToSeconds: jumpedToSeconds ?? undefined,
@@ -244,6 +244,13 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
       setAnswer(finalAnswer);
       announce(finalAnswer);
       playAnswerIn();
+      // Failures aren't answers: don't remember them or mark the timeline.
+      if (res.failed) return;
+      const prior = history.current.itemId === snap.item.id ? history.current.turns : [];
+      history.current = {
+        itemId: snap.item.id,
+        turns: [...prior, { question, answer: res.text }].slice(-MAX_HISTORY_TURNS),
+      };
       // Drop a navigable marker carrying this answer at the (possibly jumped) time.
       addAskMarker(askedAtSeconds, snap.mode, finalAnswer);
     },
@@ -321,17 +328,9 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                 ],
               }}
             >
-              {answer.proactive ? (
-                <View style={[styles.proactivePill, { borderColor: accent }]}>
-                  <Text style={[styles.proactivePillText, { color: accent }]}>
-                    {answer.insight ? '✨ SCENE INSIGHT' : '⚡ BIG PLAY'}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.question} numberOfLines={2}>
-                  “{answer.question}”
-                </Text>
-              )}
+              <Text style={styles.question} numberOfLines={2}>
+                “{answer.question}”
+              </Text>
               {answer.jumpedToLabel ? (
                 <View style={[styles.jumpPill, { borderColor: accent }]}>
                   <Text style={[styles.jumpPillText, { color: accent }]}>
@@ -341,8 +340,7 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
               ) : null}
               {answer.askedAtLabel && !answer.jumpedToLabel ? (
                 <Text style={styles.anchor}>
-                  {answer.proactive ? 'at ' : 'asked at '}
-                  {answer.askedAtLabel}
+                  asked at {answer.askedAtLabel}
                 </Text>
               ) : null}
               {answer.pending ? (
@@ -356,8 +354,8 @@ export const SideKickOverlay: React.FC<{ proactive?: SideKickAnswer | null }> = 
                     {revealedText}
                     {!revealDone ? <Text style={{ color: accent }}>▋</Text> : null}
                   </Text>
-                  {revealDone && answer.fromFallback ? (
-                    <Text style={styles.fallbackNote}>offline answer</Text>
+                  {revealDone && answer.failed ? (
+                    <Text style={styles.failedNote}>no answer — connection problem</Text>
                   ) : null}
                 </>
               )}
@@ -500,19 +498,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.weight.bold,
     letterSpacing: theme.tracking.wide,
   },
-  proactivePill: {
-    alignSelf: 'flex-start',
-    borderWidth: 2,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.spacing.xs / 2,
-    paddingHorizontal: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  proactivePillText: {
-    fontSize: theme.font.caption,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
   answerText: {
     color: theme.colors.textPrimary,
     fontSize: theme.font.title,
@@ -524,7 +509,7 @@ const styles = StyleSheet.create({
     fontSize: theme.font.body,
     marginStart: theme.spacing.sm,
   },
-  fallbackNote: {
+  failedNote: {
     color: theme.colors.textMuted,
     fontSize: theme.font.caption,
     marginTop: theme.spacing.sm,

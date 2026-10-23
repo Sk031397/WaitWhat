@@ -26,18 +26,6 @@ export interface CatalogItem {
   /** Display rating, e.g. "8.7" or "LIVE". */
   rating?: string;
 
-  /**
-   * Scripted proactive "scene insight" moments: at each timestamp SideKick
-   * auto-surfaces a short insight (no question needed).
-   */
-  sceneMoments?: SceneMoment[];
-}
-
-/** A proactive scene-insight moment for general content. */
-export interface SceneMoment {
-  atSeconds: number;
-  /** Short, 10-foot insight shown proactively. */
-  text: string;
 }
 
 export type SideKickMode = 'general' | 'sports';
@@ -51,16 +39,12 @@ export interface SideKickAnswer {
   text: string;
   /** True while awaiting the backend. */
   pending?: boolean;
-  /** True if this came from the seeded fallback, not live Bedrock. */
-  fromFallback?: boolean;
+  /** True when the model couldn't be reached; `text` explains, it's not an answer. */
+  failed?: boolean;
   /** Playback position (seconds) when the user asked — timeline anchoring. */
   askedAtSeconds?: number;
   /** Formatted version of askedAtSeconds, e.g. "2:14". */
   askedAtLabel?: string;
-  /** True when SideKick surfaced this proactively (no user question). */
-  proactive?: boolean;
-  /** True for a general-mode scene insight. */
-  insight?: boolean;
   /** When the question asked to jump to a time, the resolved target (seconds). */
   jumpedToSeconds?: number;
   /** Formatted jumpedToSeconds, e.g. "0:10". */
@@ -87,11 +71,27 @@ export interface AskRequest {
     /** Current playback position in seconds — scene/play context. */
     positionSeconds: number;
     context?: Record<string, string | string[]>;
+    /**
+     * Frame-set id (the video file's stem). The backend loads real frames
+     * extracted from this video up to positionSeconds and shows them to Nova.
+     */
+    videoId?: string;
   };
+  /** True when the app just seeked to positionSeconds because the user asked to. */
+  navigated?: boolean;
+  /** Recent exchanges about this title, oldest first, so follow-ups make sense. */
+  history?: AskTurn[];
+}
+
+/** One prior question/answer pair. */
+export interface AskTurn {
+  question: string;
+  answer: string;
 }
 
 /** Response from the backend /ask endpoint. */
 export interface AskResponse {
   text: string;
-  fromFallback?: boolean;
+  /** True when no model answer was produced; `text` is an error message. */
+  failed?: boolean;
 }

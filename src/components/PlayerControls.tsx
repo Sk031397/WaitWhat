@@ -138,7 +138,6 @@ const TimelineMarker: React.FC<{ left: number; color: string; latest: boolean }>
 const MarkerChip: React.FC<{ mk: AskMarker; onPress: () => void }> = ({ mk, onPress }) => {
   const [focused, setFocused] = React.useState(false);
   const accent = mk.mode === 'sports' ? theme.colors.sports : theme.colors.primary;
-  const label = mk.answer?.proactive ? '⚡' : '';
   return (
     <Pressable
       onPress={onPress}
@@ -152,7 +151,6 @@ const MarkerChip: React.FC<{ mk: AskMarker; onPress: () => void }> = ({ mk, onPr
     >
       <View style={[styles.chipDot, { backgroundColor: accent }]} />
       <Text style={styles.chipText}>
-        {label}
         {fmt(mk.positionSeconds)}
       </Text>
     </Pressable>

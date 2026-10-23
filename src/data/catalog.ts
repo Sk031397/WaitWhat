@@ -55,7 +55,6 @@ export const MEDIA: Record<string, Media> = {
   movie04: { video: FILM.cosmos,thumbnail: img('cosmos', 420, 260),   hero: img('cosmos-hero', 1920, 1080) },
   movie05: { video: FILM.glass, thumbnail: img('halflife', 420, 260), hero: img('halflife-hero', 1920, 1080) },
   // Made-up sports (fictional teams/stats) over REAL, license-clear footage.
-  // basketball matches the seeded game data (Q4, points/rebounds).
   game01:  { video: sportVid('basketball'),        thumbnail: sportImg('basketball'),        hero: sportImg('basketball') },
   game02:  { video: sportVid('american_football'), thumbnail: sportImg('american_football'), hero: sportImg('american_football') },
   game03:  { video: sportVid('hockey'),            thumbnail: sportImg('hockey'),            hero: sportImg('hockey') },
@@ -231,10 +230,6 @@ export const CATALOG: CatalogItem[] = [
     genres: ['Drama', 'Survival'],
     releaseYear: 2025,
     rating: '8.7',
-    sceneMoments: [
-      { atSeconds: 8, text: 'New scene: the crew reaches the supply cache and finds it raided — the moment the season’s central mystery begins.' },
-      { atSeconds: 20, text: 'Watch Elin here — this exchange pays off the fuel-log confrontation from last episode.' },
-    ],
     context: {
       cast: ['Mara Lindqvist as Dr. Elin Vos', 'Theo Grant as Captain Reyes'],
       previousEpisode:
@@ -359,7 +354,3 @@ export const itemsForRow = (row: string): CatalogItem[] =>
 
 export const getCatalogItem = (id: string): CatalogItem | undefined =>
   CATALOG.find((c) => c.id === id);
-
-/** Find a scene moment whose timestamp was just crossed between prev and now. */
-export const sceneMomentCrossed = (item: CatalogItem, prev: number, now: number) =>
-  item.sceneMoments?.find((sm) => prev < sm.atSeconds && now >= sm.atSeconds);

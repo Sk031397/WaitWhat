@@ -12,10 +12,23 @@ export interface AskRequest {
     synopsis: string;
     positionSeconds: number;
     context?: Record<string, string | string[]>;
+    /** Frame-set id (video file stem): frames live at frames/<videoId>/<sec>.jpg. */
+    videoId?: string;
   };
+  /** True when the app just seeked to positionSeconds because the user asked to. */
+  navigated?: boolean;
+  /** Recent exchanges about this title, oldest first, so follow-ups make sense. */
+  history?: AskTurn[];
+}
+
+/** One prior question/answer pair. */
+export interface AskTurn {
+  question: string;
+  answer: string;
 }
 
 export interface AskResponse {
   text: string;
-  fromFallback?: boolean;
+  /** True when no model answer was produced; `text` is an error message. */
+  failed?: boolean;
 }

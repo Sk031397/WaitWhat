@@ -2,9 +2,9 @@
 
 > Hold one button and ask about anything you're watching. Wait, What? answers in a
 > non-blocking overlay **without pausing playback**, anchors every answer to the
-> moment you asked, lets you **navigate by natural language**, and **proactively
-> surfaces** what's happening — and it announces answers through **VoiceView**
-> for low-vision viewers.
+> moment you asked, lets you **navigate by natural language**, and **sees the
+> actual frames** of what you're watching — and it announces answers through
+> **VoiceView** for low-vision viewers.
 
 Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — Fire TV track
 (priority categories: *AI-enhanced viewing*, *sports*, *multi-modal UX*,
@@ -33,8 +33,9 @@ companion pipeline that:
   context (teams, venue, situation), so "catch me up" or "what's the score"
   answer in the moment (teams are fictional; footage is our own license-clear
   clips);
-- **anticipates** — on shows too, at key scene moments it proactively surfaces a
-  scene insight without being asked;
+- **sees the screen** — every question carries real frames extracted from the
+  video up to your position, so "what's happening right now?" is answered from
+  the footage itself (and it can't spoil what's ahead);
 - **narrates** — answers are announced through VoiceView, so a low-vision viewer
   hears what's on screen.
 
@@ -49,17 +50,18 @@ the content *and where you are in it*.
 Ask (focus field → system keyboard mic / type)      Natural-language nav
         │                                             "go to the middle"
         ▼                                                    │
-VideoContext.snapshot()  { title, synopsis, positionSeconds, context }
+VideoContext.snapshot()  { title, synopsis, positionSeconds, context, videoId }
  (what's on screen, where)                                   │
         │                                            parseTimePhrase /
         ▼                                            parseSeekIntent → seek
 buildAskRequest()  ──►  POST /ask  ──►  API Gateway ──► Lambda ──► Bedrock Nova
-        │                   (6s timeout)                   │        (Converse,
-        │                                                  ▼         grounded)
-        │                                           { text }  →  seeded fallback
-        ▼                                                         if unavailable
+        │                  (11s timeout)                   │        (Converse,
+        │                                   S3 frames/<videoId>/<sec>.jpg   Nova Lite,
+        │                                   (last 4 frames ≤ position) ──►  text + images)
+        │                                                  ▼
+        │                                     { text } or an error — never a canned answer
+        ▼
 SideKickOverlay (right-edge panel)  ──►  answer + timeline marker + VoiceView
-        │                                proactive scene insights (unprompted)
         ▼
 VideoPlayer (W3C media) keeps playing — never paused
 ```
@@ -91,7 +93,7 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   ├── config.ts              # ASK_ENDPOINT (deployed backend URL)
 │   ├── screens/
 │   │   ├── HomeScreen.tsx      # hero header + horizontal content rows
-│   │   └── PlayerScreen.tsx    # full-screen video + controls + overlay + proactive
+│   │   └── PlayerScreen.tsx    # full-screen video + controls + overlay
 │   ├── components/
 │   │   ├── FocusableCard.tsx   # grid tile w/ animated focus bloom
 │   │   ├── PlayerControls.tsx  # play/pause, ±10s, seek bar + "Your questions" chips
@@ -104,17 +106,17 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   │   ├── SideKickOverlay.tsx # non-blocking slide-out answer panel
 │   │   ├── QuestionInput.tsx   # TextInput → system-keyboard mic (Vega voice path)
 │   │   ├── ModeRouter.ts       # builds the grounded AskRequest
-│   │   └── bedrockClient.ts    # calls /ask; seeded fallback if offline
+│   │   └── bedrockClient.ts    # calls /ask; shows an error if unreachable
 │   ├── util/
 │   │   ├── parseTimePhrase.ts  # natural-language seek: "0:10", "the middle", "a quarter"
 │   │   └── formatTime.ts
 │   ├── data/                  # catalog (shows/movies) + shared types
 │   └── theme/                 # 10-foot scaling + colors + motion tokens
 └── backend/                   # the AWS Builder piece
-    ├── handler.ts             # Lambda: Bedrock Nova (Converse) + seeded fallback
+    ├── handler.ts             # Lambda: loads frames from S3 → Bedrock Nova Lite (Converse)
     ├── template.yaml          # SAM reference (deployed via API Gateway + Lambda)
     ├── devServer.ts           # local http wrapper for the handler
-    └── test.ts                # 14 assertions over the fallback path (no AWS needed)
+    └── test.ts                # validation, auth, and error-path checks (no AWS needed)
 ```
 
 ---
@@ -159,8 +161,7 @@ source $HOME/vega/env && npm run build:debug
 > The demo browses shows/movies on the home grid; open any title to watch.
 > Open the **Ask Wait, What?** panel, then type or (on a device) hold the Alexa
 > button to dictate a question. Try a navigation phrase like *"go to the middle"*
-> or *"take me to 0:10 and tell me what's happening."* A scene insight surfaces
-> on its own a few seconds in. Open a **Live Sports** game to see sports mode:
+> or *"take me to 0:10 and tell me what's happening."* Open a **Live Sports** game to see sports mode:
 > Wait, What? re-themes and answers "catch me up" / "what's the score" grounded on
 > the game context (fictional teams over our own license-clear footage).
 
@@ -169,16 +170,23 @@ source $HOME/vega/env && npm run build:debug
 ```bash
 cd backend
 npm install
-npm test        # 14/14 — exercises the seeded fallback with no AWS creds
+npm test        # validation/auth/error-path tests, no AWS creds needed
 
 # Option A — run locally
 npm run dev     # http://localhost:3000/ask  (uses your shell AWS creds for Bedrock)
 
-# Option B — deploy with SAM
+# Option B — update the live Lambda + API (what this project uses)
+./deploy.sh
+
+# Option C — deploy fresh with SAM
 npm run build
 sam deploy --guided --template-file template.yaml
 # Copy the AskEndpoint output URL
 ```
+
+Frames: run `scripts/extract-frames.sh` once (and again whenever a video
+changes) to extract a frame every 2s from every catalog video and upload them
+to `s3://sidekickvegaos/frames/<videoId>/<second>.jpg`.
 
 Then point the app at the endpoint — in `src/config.ts` set `ASK_ENDPOINT`, or
 call `setAskEndpoint('https://…/ask')` at startup. (A live API Gateway endpoint
@@ -188,19 +196,20 @@ is already wired in `src/config.ts` for this submission.)
 Enable model access for an **Amazon Nova** model in your region
 (`aws bedrock list-inference-profiles --region us-east-1` to confirm the id).
 The deployed handler uses the cross-region inference profile
-`us.amazon.nova-micro-v1:0`; override with the `BEDROCK_MODEL_ID` env var.
+`us.amazon.nova-lite-v1:0` (multimodal — it reads the frames); override with the
+`BEDROCK_MODEL_ID` env var.
 (First-party Nova models need no AWS Marketplace subscription; third-party
 models like Claude do.)
 
 ---
 
-## Resilience: it always answers
+## No canned answers
 
-If the backend is unreachable (no deploy, offline demo, throttling), both the
-client (`bedrockClient.seededFallback`) and the server (`handler.seededFallback`)
-return a deterministic seeded answer from the catalog context (synopsis, cast,
-teams). This keeps the on-camera demo bulletproof while still being a real
-Bedrock call when connected. The two fallbacks are intentionally mirrored.
+Every answer comes from the model. If the backend or Bedrock is unreachable,
+the server returns an error (503) and the app says it couldn't reach Wait,
+What? — it never substitutes a pre-written answer. Failed attempts don't drop a
+timeline marker. If frames are missing for a moment, the model is told it can't
+see the screen and says so rather than guessing.
 
 ---
 
@@ -208,10 +217,10 @@ Bedrock call when connected. The two fallbacks are intentionally mirrored.
 
 | Criterion | Where it shows up |
 |---|---|
-| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, untrusted-input validation, graceful seeded fallback |
+| **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, untrusted-input validation, honest error handling (no canned answers) |
 | **Design** | One hold-to-ask gesture, non-blocking slide-out panel, **animated focus bloom**, cinematic vignette, timeline-anchored answers with a **navigable Q&A history**, context-themed **sports mode** (accent re-theme), 10-foot scaling, accessible focus (border + scale, not color alone) |
 | **Potential Impact** | Near-universal behaviors (ask about what you're watching, catch up on a game) solved without leaving the screen — **plus an accessibility layer** (answers spoken via VoiceView for low-vision viewers) and a **content-agnostic pipeline any streaming app could embed** |
-| **Quality of the Idea** | **Talk to your timeline** — ask, navigate by natural language, revisit any question on the scrubber, get proactive scene insights, and an adaptive **sports mode** that re-themes and grounds live answers on the game. One companion that understands what you're watching *and where you are in it*. |
+| **Quality of the Idea** | **Talk to your timeline** — ask, navigate by natural language, revisit any question on the scrubber, answers grounded in the actual video frames, and an adaptive **sports mode** that re-themes and grounds live answers on the game. One companion that understands what you're watching *and where you are in it*. |
 
 ---
 
@@ -243,31 +252,34 @@ plain companion app would miss:
 
 **Services used**
 
-- **Amazon Bedrock (Nova Micro) via the Converse API** (`@aws-sdk/client-bedrock-runtime`).
-  `backend/handler.ts` builds a system prompt that grounds the model on the
-  current title, synopsis, cast, and the viewer's exact playback position, then
-  calls `ConverseCommand` with `maxTokens: 256` and `temperature: 0.3`.
-  Deployed and live — the app receives real model-generated answers
-  (`fromFallback: false`), with the seeded fallback reserved for offline/outage.
+- **Amazon Bedrock (Nova Lite) via the Converse API** (`@aws-sdk/client-bedrock-runtime`).
+  `backend/handler.ts` loads the last few real frames up to the viewer's
+  position from S3 and sends them as image blocks with the question, plus a
+  system prompt grounding the title, synopsis, cast, and recent exchanges
+  (for follow-ups). `maxTokens: 150`, `temperature: 0.3`.
+- **Amazon S3** — hosts the sports clips and the extracted frames
+  (`frames/<videoId>/<second>.jpg`), read by the Lambda.
 - **Amazon API Gateway (HTTP API) + AWS Lambda** — public HTTPS `/ask` endpoint
   with CORS; the Lambda holds the Bedrock integration. (A Function URL was tried
   first; this account blocks public Function URLs, so an HTTP API fronts the
   Lambda instead — documented in the build history.)
-- **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on foundation
-  models + inference profiles only.
+- **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on Nova
+  models + inference profiles, and `s3:GetObject` on the media bucket.
+- **Cost guards** — API Gateway throttling (5 req/s, burst 10), Lambda
+  reserved concurrency, and a shared `x-ww-key` header.
 
 **Practices applied from AWS guidance**
 
 - `maxTokens` set explicitly (avoids the silent 43× quota reservation that causes
   ThrottlingException).
 - Cross-region inference profile id (`us.` prefix) for availability.
-- Adaptive retry (`maxAttempts: 5`, `retryMode: 'adaptive'`).
+- One retry inside a fixed time budget (`maxAttempts: 2`, 8s abort) so the
+  backend never outlives the app's 11s timeout.
 - Request body treated as untrusted: validated shape + clamped to 300 chars
   before entering the prompt.
 - No AWS credentials ever ship in the TV app — Bedrock is only ever called
   server-side.
-- Graceful degradation: a deterministic seeded fallback (mirrored client + server)
-  keeps the app answering if the model or network is unavailable.
+- No canned answers: failures are reported as failures.
 
 ---
 

@@ -4,9 +4,7 @@ import { VideoProvider, useVideoContext } from '@sidekick/player/useVideoContext
 import { VideoPlayer } from '@sidekick/player/VideoPlayer';
 import { SideKickOverlay } from '@sidekick/sidekick/SideKickOverlay';
 import { PlayerControls } from '@sidekick/components/PlayerControls';
-import { getCatalogItem, sceneMomentCrossed } from '@sidekick/data/catalog';
-import { SideKickAnswer } from '@sidekick/data/types';
-import { formatTime } from '@sidekick/util/formatTime';
+import { getCatalogItem } from '@sidekick/data/catalog';
 import { theme } from '@sidekick/theme';
 
 const CONTROLS_HIDE_MS = 5000;
@@ -28,11 +26,6 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
   const [duration, setDuration] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Proactive big-play card (sports mode). Fired once when a seeded timestamp
-  // is crossed; passed to the overlay which surfaces it without a question.
-  const [proactive, setProactive] = useState<SideKickAnswer | null>(null);
-  const firedMoments = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (item) setCurrent(item);
@@ -134,25 +127,6 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
           if (d && d !== duration) setDuration(d);
           setProgress(t, d);
 
-          // Proactive scene-insight detection (general content, any mode).
-          if (current) {
-            const sm = sceneMomentCrossed(current, currentTime, t);
-            if (sm && !firedMoments.current.has(sm.atSeconds)) {
-              firedMoments.current.add(sm.atSeconds);
-              // eslint-disable-next-line no-console
-              console.info(`[SideKick] PROACTIVE insight fired at ${t.toFixed(1)}s: ${sm.text}`);
-              setProactive({
-                id: `insight-${sm.atSeconds}`,
-                mode,
-                question: '',
-                text: sm.text,
-                askedAtSeconds: t,
-                askedAtLabel: formatTime(t),
-                proactive: true,
-                insight: true,
-              });
-            }
-          }
         }}
       />
 
@@ -215,7 +189,7 @@ const PlayerInner: React.FC<{ itemId: string; onBack: () => void }> = ({
       />
 
       {/* Slide-out SideKick companion */}
-      <SideKickOverlay proactive={proactive} />
+      <SideKickOverlay />
     </View>
   );
 };

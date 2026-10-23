@@ -1,4 +1,4 @@
-import { AskRequest, CatalogItem, SideKickMode } from '@sidekick/data/types';
+import { AskRequest, AskTurn, CatalogItem, SideKickMode } from '@sidekick/data/types';
 
 /**
  * ModeRouter — the heart of SideKick's "context awareness".
@@ -18,17 +18,27 @@ export const buildAskRequest = (
   positionSeconds: number,
   mode: SideKickMode,
   question: string,
+  navigated = false,
+  history: AskTurn[] = [],
 ): AskRequest => ({
   mode,
   question,
+  navigated,
+  history,
   content: {
     title: item.title,
     contentType: item.contentType,
     synopsis: item.synopsis,
     positionSeconds: Math.round(positionSeconds),
     context: item.context,
+    // The backend shows Nova real frames from this video up to the position.
+    videoId: videoIdFor(item.videoUrl),
   },
 });
+
+/** Frame-set id for a video URL: its file name without extension. */
+export const videoIdFor = (url: string): string =>
+  (url.split('?')[0].split('/').pop() ?? '').replace(/\.[a-z0-9]+$/i, '');
 
 /**
  * Suggested prompts shown as hints, tailored to the active mode. Gives the
