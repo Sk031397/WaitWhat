@@ -284,18 +284,25 @@ New: created during the submission window (first commit Oct 9, 2026).
 - **AWS CLI** — session expiry mid-deploy (minor).
 
 **4) How was onboarding (zero to hello world)?**
-Good once we used the official RN 0.72 template + `vega project` tooling — that
-path gets you to a running app on the Virtual Device quickly and manages the
-manifest module ladder for you. The friction was less about getting to hello
-world and more about discovering platform edges afterward (the player stack,
-voice, missing packages) — mostly surfaced only at the point of failure.
+**Good on the happy path.** Fire TV / Vega: the official RN 0.72 template plus
+`vega project` tooling got a running app on the Virtual Device quickly and
+managed the manifest module ladder for us. The friction came after hello world:
+platform edges (the W3C player instead of `react-native-video`, voice through the
+system keyboard, packages missing from the OS 1.2 profile) were mostly
+discovered at the point of failure rather than up front. AWS: Bedrock with Nova
+was instant (no Marketplace step) and the Converse API was easy to learn; the
+slowdowns were account-level (public Function URLs blocked, Claude gated by
+Marketplace billing, a low concurrency quota), each with an error that didn't
+name the cause.
 
 **5) Would you build with these devices/services again? (Yes/No + why)**
-**Yes.** The core — W3C media, RN 0.72, the Vega CLI, and Nova on Bedrock — is
-coherent and productive once you learn its shape, and first-party Bedrock access
-was frictionless. The biggest unlocks for the next wave of apps would be an
-**app-level push-to-talk STT API** and **app-level TTS**; those two alone would
-open up voice-first TV experiences that today require workarounds.
+**Yes.** The core — W3C media, React Native 0.72, the Vega CLI, and Nova on
+Bedrock — is coherent and productive once you learn its shape, and the AWS side
+(Bedrock + Lambda + API Gateway + S3) let a small team ship a multimodal AI
+feature in days. The biggest unlocks for the next wave of Fire TV apps would be
+an **app-level push-to-talk speech-to-text API**, **app-level text-to-speech**,
+and a **frame-capture API** — together they'd make voice-first, vision-aware TV
+experiences possible without workarounds.
 
 ---
 
