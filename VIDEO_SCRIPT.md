@@ -23,21 +23,26 @@ the punchline (it echoes the confused questions you just listed), then continue.
 
 ---
 
-## 0:15–0:50 · LIVE AI + TIMELINE ANCHOR  (≈70 words)
+## 0:15–0:50 · SCENE INSIGHT + LIVE AI + TIMELINE ANCHOR  (≈80 words)
 
-`[ACTION]` Open a show. Let it play 2–3 seconds (clearly live). Open **Ask
-Wait, What?** — panel slides in. Focus the field, type/dictate: **"Who is in this
-scene?"** Submit.
+`[ACTION]` Open **Tears of Steel** and let it play. At 0:10 a **✨ SCENE
+INSIGHT** card appears on its own.
 
-> "I open Wait, What? and just ask — and notice the show keeps playing underneath.
-> I'm never pausing."
+> "I haven't asked anything yet — it noticed the new scene and told me what's on
+> screen."
+
+`[ACTION]` **Hold Menu (☰)** — the panel slides in with the field focused.
+Type/dictate: **"What's happening right now?"** Submit.
+
+> "One hold and I'm asking — and the film keeps playing underneath. I'm never
+> pausing."
 
 `[ACTION]` When the answer lands, point to the **"asked at 0:4X"** line and the
 marker on the seek bar.
 
-> "That's a **live Amazon Bedrock call**, grounded on the title, the episode,
-> and the exact moment I asked — and it pins the answer right there on the
-> timeline."
+> "That's a **live Amazon Bedrock call**, looking at the actual frames up to
+> the moment I asked — so no spoilers — and it pins the answer right there on
+> the timeline."
 
 ---
 
@@ -69,11 +74,7 @@ MODE". Ask **"Catch me up."** Live answer grounded on the game.
 
 ---
 
-## 2:00–2:20 · SEES THE SCREEN + REVISIT THE TIMELINE  (≈50 words)
-
-`[ACTION]` On Tears of Steel, ask "what's happening right now?".
-
-> "It's looking at the actual frames up to where I am — not guessing, no spoilers."
+## 2:00–2:20 · REVISIT THE TIMELINE  (≈30 words)
 
 `[ACTION]` Open controls, focus the **"Your questions:"** chips, select an
 earlier one — it jumps back and re-shows that answer.
@@ -107,10 +108,10 @@ earlier one — it jumps back and re-shows that answer.
 | Block | End time | Trim priority |
 |---|---|---|
 | Hook | 0:15 | keep |
-| Live AI + anchor | 0:50 | keep |
+| Insight + live AI + anchor | 0:50 | keep |
 | NL navigation | 1:30 | keep (signature) |
 | Sports mode | 2:00 | keep |
-| Sees the screen + revisit | 2:20 | keep |
+| Revisit the timeline | 2:20 | keep |
 | Under the hood | 2:38 | **cut first** |
 | Close | 2:45 | keep |
 
@@ -120,6 +121,7 @@ earlier one — it jumps back and re-shows that answer.
 - Let one answer **type out on screen** (the typewriter reveal) rather than
   cutting away — it proves it's live.
 - If a take fumbles, keep rolling and redo the line; edit later. Clean takes of
-  the **navigation** and **CV** beats matter most.
+  the **scene insight**, **navigation** and **"what's happening right now?"**
+  beats matter most.
 - Do NOT show console logs or simulator chrome — crop the capture to the VD screen.
 - Don't name teams or ask for a score: the clips are license-clear amateur footage with no scoreboard.

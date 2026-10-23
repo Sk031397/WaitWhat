@@ -10,9 +10,9 @@ Paste the body of each section into the matching field. Fill the bracketed
 Wait, What? — talk to your timeline
 
 ## Elevator pitch (one sentence, ~200 char field)
-Ask about anything you're watching — without pausing. Wait, What? answers on the TV
-via live Amazon Bedrock, lets you navigate by natural language, and anchors every
-answer to the moment on your timeline.
+Ask about anything you're watching — without pausing. Wait, What? sees the real
+frames, answers on the TV via Amazon Bedrock, navigates by plain language, and pins
+every answer to your timeline.
 
 ---
 
@@ -31,8 +31,9 @@ anchors every answer to the moment you asked, lets you navigate by plain languag
 ("take me to the middle"), and sees the actual frames on screen.
 
 ### What it does
-While a show plays full-screen (playback never stops):
-- **Ask about anything on screen** — a live **Amazon Bedrock** answer, grounded
+While a film or game plays full-screen (playback never stops):
+- **Ask about anything on screen** — hold Menu (☰) and the panel opens with the
+  keyboard mic ready; a live **Amazon Bedrock** answer comes back, grounded
   on the title, synopsis, cast, and your exact playback position, in a
   non-blocking side panel.
 - **Talk to your timeline** — say where to go in plain language ("take me to
@@ -48,6 +49,9 @@ While a show plays full-screen (playback never stops):
 - **It sees the screen** — every question carries real frames from the video up
   to your position, so "what's happening right now?" is answered from the
   footage itself (and it can't spoil what's ahead).
+- **It anticipates** — when a new scene starts, a ✨ scene insight surfaces what's
+  on screen unprompted (pre-generated from the real frames, so it's free at
+  playback time).
 - **It's accessible** — answers are announced through **VoiceView** for
   low-vision viewers.
 
@@ -57,17 +61,25 @@ While a show plays full-screen (playback never stops):
   `react-native-video` (unsupported on Vega), wrapped behind a familiar player
   API over `VideoPlayer` + `KeplerVideoSurfaceView`. Vega-native navigation,
   accessible 10-foot focus (border + scale, never color alone), dependency-free
-  gradient/vignette. Voice input via the supported system-keyboard mic path.
+  gradient/vignette. Voice input via the supported system-keyboard mic path;
+  holding Menu (timed from key-down/key-up) opens the panel with the field
+  focused.
 - **Backend (AWS Builder).** **Amazon Bedrock Nova Lite** (multimodal) via the Converse API
   behind **API Gateway (HTTP API) + Lambda** with **least-privilege IAM**;
   context-grounded prompt plus the last real frames (from S3) up to the playback
   position. No AWS credentials ship in the TV app; if the model is unreachable
-  the app says so instead of showing a canned answer.
+  the app says so instead of showing a canned answer. A warm-up ping when the
+  player opens avoids cold starts.
+- **Frames + insights.** ffmpeg extracts a 768px frame every 2s of every video to
+  **Amazon S3**. An offline script finds scene changes in those frames and asks
+  Nova Lite for one-line scene insights, which ship with the app.
 
 ### Challenges we ran into
 Vega is a young platform (full detail in our friction log): no app-level STT (we
 use the system-keyboard mic) and no app-level TTS (we use VoiceView); no
-video-frame-capture API; several packages absent from the OS 1.2 profile; public
+video-frame-capture API (we extract frames server-side ahead of time); no
+long-press event outside a focused control (we time the Menu key ourselves);
+several packages absent from the OS 1.2 profile; public
 Lambda Function URLs blocked on the account (we used API Gateway); and Claude
 gated by AWS Marketplace billing (we used first-party Nova, which worked
 instantly).
@@ -76,7 +88,8 @@ instantly).
 A working, platform-correct Vega app verified on the Vega Virtual Device; a live,
 deployed Bedrock integration (not mocked) that fails honestly instead of inventing answers; and a genuinely
 new interaction — talking to the timeline (ask, navigate, revisit) — plus
-answers grounded in the real frames and a real accessibility story.
+answers grounded in the real frames, scene insights that surface on their own,
+and a real accessibility story.
 
 ### What we learned
 How to build *with* Vega's constraints rather than against them (W3C media, the
@@ -85,15 +98,15 @@ experience resilient (grounded prompts, explicit `maxTokens`, adaptive retry,
 hard timeouts, honest errors).
 
 ### What's next
-Real detected scene boundaries for proactivity; a first-class "Describe this
-scene" accessibility mode; and packaging Wait, What? as a drop-in companion layer
+Longer sports footage with a visible scoreboard, so score questions are read
+straight off the screen; a first-class "Describe this scene" accessibility mode; and packaging Wait, What? as a drop-in companion layer
 any streaming app can embed — the pipeline is content-agnostic.
 
 ---
 
 ## Built with  (tags field — comma-separated)
-fire-tv, vega-os, react-native, amazon-bedrock, amazon-nova,
-aws-lambda, amazon-api-gateway, aws-iam, w3c-media, voiceview, typescript
+fire-tv, vega-os, react-native, amazon-bedrock, amazon-nova, amazon-s3,
+aws-lambda, amazon-api-gateway, aws-iam, w3c-media, voiceview, ffmpeg, typescript
 
 ---
 
@@ -127,6 +140,9 @@ AWS Builder
 - **Amazon Bedrock (Nova Lite)** via `@aws-sdk/client-bedrock-runtime` Converse
   API — the grounded Q&A answers, with real video frames as input.
 - **Amazon S3** — hosts the sports clips and the extracted video frames.
+- `useTVEventHandler` (`@amazon-devices/react-native-kepler`) — remote key
+  events, used to detect a held Menu button.
+- **ffmpeg** — frame extraction and scene-change detection for the insights.
 - **AWS Lambda + API Gateway (HTTP API) + IAM** — the serverless `/ask` endpoint
   with least-privilege permissions.
 - **VoiceView** (via `AccessibilityInfo.announceForAccessibility`) — spoken
@@ -145,7 +161,9 @@ AWS Builder
 **3) What needs work?** (summary — full detail in the friction log below)
 - **No app-level speech-to-text** and **no app-level TTS** — the two biggest gaps
   for voice-first TV apps; we used the system-keyboard mic and VoiceView.
-- **No video-frame-capture API** on Vega — noted and worked around.
+- **No video-frame-capture API** on Vega — we extract frames server-side instead.
+- No long-press event for remote keys unless a control is focused — we time
+  Menu's key-down/key-up ourselves.
 - `react-native-video` fails on Vega with no hint toward W3C media; setting `src`
   without `load()` black-screens silently; surface-view lifecycle churn can crash
   the media stack with only a native abort.
@@ -172,7 +190,7 @@ open up voice-first TV experiences that today require workarounds.
 ---
 
 ## FRICTION LOG  (paste the full contents of FRICTION_LOG.md into the friction-log
-## field — 13 structured entries, Task → Steps → Expected vs Actual → Severity →
+## field — 16 structured entries, Task → Steps → Expected vs Actual → Severity →
 ## Workaround → Suggestion. Participants who submit friction logs score higher,
 ## up to a 10% bonus.)
 

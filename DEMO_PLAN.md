@@ -14,10 +14,11 @@ headline moments:
 3. **Context-aware sports mode** — open a game and Wait, What? re-themes and
    answers "catch me up" / "break down this play" grounded on the game (Idea + sports).
 4. **It sees the screen** — "what's happening right now?" answered from the real frames (Idea + multi-modal).
-5. **Accessible by design** — answers spoken via VoiceView for low-vision
+5. **It anticipates** — a ✨ scene-insight card surfaces on its own at a new scene (Idea).
+6. **Accessible by design** — answers spoken via VoiceView for low-vision
    viewers; non-blocking, platform-correct (Design/Impact).
 
-> NOTE: Wait, What? has two modes from one gesture. **Companion mode** (shows/movies)
+> NOTE: Wait, What? has two modes from one gesture. **Companion mode** (films)
 > answers anything, grounded on the real frames. **Sports mode** (a "Sports"
 > row of 9 games) re-themes and grounds its live Bedrock answers on the game
 > context and the real frames. Titles describe what each clip actually shows; there
@@ -29,8 +30,10 @@ headline moments:
 
 ## Before you hit record (checklist)
 
-- [ ] **Real content** swapped into `src/data/catalog.ts` → `MEDIA` (poster art +
-      your own clips). Test each plays on the sim. Biggest visual-quality lever.
+- [ ] **Poster art**: the films' thumbnails/hero images are still `picsum.photos`
+      placeholders in `src/data/catalog.ts` → `MEDIA`. Swap in real art (biggest
+      visual-quality lever). If you change any video, rerun
+      `scripts/extract-frames.sh` and `cd backend && npm run insights`, then rebuild.
 - [ ] Live backend confirmed: `curl` the endpoint and verify it returns `{"text": ...}`
       (with the `x-ww-key` header from `src/secrets.ts`).
       (Live on Amazon Bedrock Nova Lite via API Gateway + Lambda; `ASK_ENDPOINT`
@@ -39,8 +42,10 @@ headline moments:
 - [ ] Virtual device started **with GUI**: `vega virtual-device start --gui`
       (the VD stops on idle — restart if needed).
 - [ ] Screen-record the VD window at 1080p. Know the remote/keyboard mapping.
-- [ ] Rehearse the ask flow: open panel → focus the field (keyboard/mic comes
-      up) → type/dictate → Ask. Have your exact phrases ready so takes are clean.
+- [ ] Rehearse the ask flow: **hold Menu (☰)** → panel opens with the field
+      focused (keyboard/mic comes up) → type/dictate → Ask. Confirm on screen that
+      the hold works on your remote/keyboard mapping; the tab is the fallback.
+      Have your exact phrases ready so takes are clean.
 
 ---
 
@@ -54,14 +59,16 @@ cinematic vignette all show here).
 >  without pausing**, because it knows what you're watching and exactly where you
 >  are in it."
 
-### 0:18–1:00 — Live AI + timeline anchor (the core)
-Open a show. Let playback run 2–3s (obviously live). Open **Ask Wait, What?** — the
-panel slides out. Focus the field (keyboard/mic comes up) and ask:
-**"Who is in this scene?"**
-> "I'm not pausing — the show keeps playing."
-When the answer lands, point to the **"asked at 0:41"** line + the seek-bar marker.
-> "That's a live **Amazon Bedrock** call, grounded on the title, the episode, and
->  the exact moment — and it pinned the answer right there on the timeline."
+### 0:18–1:00 — Scene insight, then live AI + timeline anchor (the core)
+Open **Tears of Steel** and let it play. At **0:10** a **✨ SCENE INSIGHT** card
+appears on its own.
+> "I didn't ask anything — it noticed the new scene and told me what's on screen."
+Now **hold Menu (☰)**: the panel slides out with the field focused (keyboard/mic
+comes up). Ask: **"What's happening right now?"**
+> "I'm not pausing — the film keeps playing."
+When the answer lands, point to the **"asked at 0:XX"** line + the seek-bar marker.
+> "That's a live **Amazon Bedrock** call, looking at the actual frames up to this
+>  moment — and it pinned the answer right there on the timeline."
 
 ### 1:00–1:40 — Natural-language navigation (the "it really gets me" beat)
 Open the panel again and type/say navigation phrases, letting the playhead jump:
@@ -83,10 +90,8 @@ Bedrock answer grounded on what's actually on screen.
 nine sports total: basketball, football, hockey, soccer, tennis, boxing, wrestling,
 baseball, and rowing.)
 
-### It sees the screen
-Open Tears of Steel, let it play a little, and ask "what's happening right now?".
-> "It isn't guessing from a synopsis — it's looking at the actual frames up to
->  where I am, so it can't spoil what's ahead."
+(That beat already shows **it sees the screen**: it describes the real frames up
+to your position, so it can't spoil what's ahead.)
 
 ### 2:00–2:20 — Revisit the timeline (navigable Q&A)
 Open the controls; focus the **"Your questions:"** chips. Select an earlier one.
@@ -114,6 +119,7 @@ Home, one clean focus sweep.
 - "it understands and takes me there" — the navigation beat.
 - "jumps back to that moment and brings the answer with it" — the navigable timeline.
 - "announced through VoiceView for low-vision viewers" — the accessibility impact.
+- "I didn't ask anything" — the scene-insight beat (it anticipates).
 - "any streaming app could embed this" — beyond-hackathon scale (good for the close
   or the written description).
 
@@ -132,6 +138,11 @@ Home, one clean focus sweep.
   `video` in `MEDIA` at the known-good Sintel URL and rebuild.
 - **Answer says "Couldn't reach Wait, What?"?** The backend/network hiccuped.
   Re-try; if persistent, check the key in `src/secrets.ts` matches the Lambda.
+- **Hold Menu didn't open the panel?** Select the **Ask Wait, What?** tab instead
+  (it says "or hold ☰"); the rest of the flow is identical.
+- **No insight card?** It only fires during normal playback (not after a seek past
+  it) and not while the panel is open — restart the title and keep the panel
+  closed until 0:10.
 - **Navigation didn't jump?** Fractional phrases ("the middle/end/quarter") need
   the clip's duration to be loaded — give it a second after opening the player,
   then ask. Explicit times ("0:10") work immediately.

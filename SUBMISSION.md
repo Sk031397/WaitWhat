@@ -20,9 +20,10 @@ anchors every answer to the moment you asked, lets you *navigate by voice/words*
 
 ## What it does
 
-While a show plays full-screen (playback never stops):
+While a film or game plays full-screen (playback never stops):
 
-- **Ask about anything on screen.** Hold-to-ask → Wait, What? answers via a live
+- **Ask about anything on screen.** Hold the remote's Menu (☰) button and the
+  panel opens with the keyboard and its mic ready → Wait, What? answers via a live
   **Amazon Bedrock** call, grounded on the title, synopsis, cast, and your exact
   playback position. The answer appears in a non-blocking side panel.
 - **Talk to your timeline.** Say where you want to go in plain language —
@@ -40,6 +41,10 @@ While a show plays full-screen (playback never stops):
 - **It sees the screen.** Every question carries real frames from the video up
   to your position, so "what's happening right now?" is answered from the
   footage itself — and it can't spoil what's ahead.
+- **It anticipates.** When a new scene starts, a small ✨ **scene insight**
+  surfaces what's on screen without being asked. Insights are pre-generated from
+  the real frames (scene changes found with ffmpeg, one-liners from Nova Lite),
+  so they cost nothing at playback time.
 - **It's accessible.** Answers are announced through **VoiceView**, so a
   low-vision viewer hears what's on screen and what's happening — a viewing
   companion that *narrates*, not just displays.
@@ -57,7 +62,9 @@ While a show plays full-screen (playback never stops):
   no linear-gradient package).
 - Voice input via the platform's only supported path: a focused `TextInput`
   brings up the system keyboard whose mic lets the user hold the Alexa button to
-  dictate (`com.amazon.inputmethod.service`).
+  dictate (`com.amazon.inputmethod.service`). Holding Menu (timed from the
+  remote's key-down/key-up events) opens the panel with that field focused, so
+  asking is one hold away.
 
 **Backend (the AWS Builder piece)**
 - **Amazon Bedrock (Nova Lite, multimodal) via the Converse API**, behind **Amazon API
@@ -68,6 +75,11 @@ While a show plays full-screen (playback never stops):
 - No AWS credentials ever ship in the TV app; Bedrock is only called server-side.
   If the model or network is unavailable the app says so — it never shows a
   canned answer.
+- **Amazon S3** holds the sports clips and a 768px frame every 2s of every video.
+  The same frames feed an offline script that detects scene changes and asks
+  Nova Lite for the scene insights that ship with the app.
+- The app pings the backend when the player opens, so the first question doesn't
+  wait on a cold Lambda.
 
 ## Challenges we ran into
 
@@ -76,7 +88,8 @@ Vega is a young platform, and building correctly meant discovering its edges
 - **No app-level speech-to-text** and **no app-level TTS** — so voice input uses
   the system-keyboard mic, and spoken output uses VoiceView. Both are the
   *supported* paths; we built to them instead of fighting them.
-- **No video-frame-capture API** on Vega — noted and worked around.
+- **No video-frame-capture API** on Vega — so frames are extracted server-side
+  ahead of time (ffmpeg → S3) and the app sends just the video id and position.
 - Several packages (**linear-gradient, kepler-ui-components, react-native-screens**)
   aren't in the OS 1.2 profile — we worked around each.
 - Public **Lambda Function URLs were blocked** on the account → we fronted the
@@ -84,13 +97,18 @@ Vega is a young platform, and building correctly meant discovering its edges
 - **Claude** access was gated by an AWS **Marketplace billing** requirement;
   Amazon's first-party **Nova** models worked immediately.
 - Certain MP4 codecs don't decode on the Vega simulator — we verified every clip.
+- No long-press event for remote keys outside a focused control — we time the
+  Menu button's key-down/key-up ourselves.
+- The vision model guesses at tiny, fast objects (a ball a few pixels wide), so
+  insights for the short sports clips are hand-checked against the frames.
 
 ## Accomplishments we're proud of
 
 - A **working, platform-correct** Vega app verified on the Vega Virtual Device.
 - A **live, deployed** Bedrock integration (not mocked) that fails honestly instead of inventing answers.
 - A genuinely new interaction: **talking to the timeline** — ask, navigate,
-  revisit — plus answers grounded in the real frames and a real accessibility story.
+  revisit — plus answers grounded in the real frames, scene insights that surface
+  on their own, and a real accessibility story.
 
 ## What we learned
 
@@ -101,7 +119,8 @@ adaptive retry, hard timeouts, honest errors).
 
 ## What's next
 
-- Real detected scene boundaries (vs. curated moments) for proactivity.
+- Longer sports footage with a visible scoreboard, so score questions can be read
+  straight off the screen.
 - A first-class **"Describe this scene"** accessibility mode.
 - Package Wait, What? as a **drop-in companion layer any streaming app can embed** —
   the pipeline is content-agnostic: it takes *what's playing + where you are + a
@@ -110,4 +129,5 @@ adaptive retry, hard timeouts, honest errors).
 ## Built with
 
 Fire TV / Vega OS · React Native · `@amazon-devices/react-native-w3cmedia` ·
-Amazon Bedrock (Nova) · AWS Lambda · Amazon API Gateway · IAM · VoiceView
+Amazon Bedrock (Nova Lite) · Amazon S3 · AWS Lambda · Amazon API Gateway · IAM ·
+ffmpeg · VoiceView

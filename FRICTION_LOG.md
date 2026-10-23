@@ -80,14 +80,17 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Task:** Explore computer-vision on the current frame.
 - **Steps:** Looked for a snapshot/`captureFrame` on the surface view.
 - **Expected:** Some way to grab the current frame (canvas-style).
-- **Actual:** None — the surface is a native hardware sink. Rules out
-  "analyze what's literally on screen now."
-- **Severity:** Medium (feature-limiting).
-- **Workaround:** Explored CV on the content's poster/scene image instead — ran
-  **Amazon Rekognition** (`DetectLabels` + `DetectText`) on the S3 image and
-  chained the result into Bedrock Nova for a natural description; ultimately
-  scoped the feature out of the final demo.
-- **Suggestion:** A frame-grab API would enable on-device CV viewing features.
+- **Actual:** None — the surface is a native hardware sink, so the app can't
+  read what's literally on screen.
+- **Severity:** Medium (reshaped a headline feature).
+- **Workaround:** First explored **Amazon Rekognition** on poster images. The
+  shipped approach moves vision server-side: ffmpeg extracts a frame every 2s of
+  every catalog video to S3 ahead of time; the app sends only the video id and
+  playback position, and the Lambda attaches the last few frames to a **Nova
+  Lite** request. The same frames feed offline scene-change detection for the
+  proactive insights. This only works for content we can pre-process.
+- **Suggestion:** A frame-grab API would enable on-device vision features for
+  any content, including live streams.
 
 ### 7. Useful packages missing from the OS 1.2 profile
 - **Task:** Add gradients, the EPG component, and `react-native-screens`.
@@ -125,11 +128,41 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Suggestion:** Point first-time hand-authored manifests at
   `vega project update-manifest` in the error text.
 
+### 10. No long-press event for remote keys outside a focused control
+- **Task:** "Hold Menu to ask" from anywhere in the player.
+- **Steps:** Looked for a long-press event in `useTVEventHandler`.
+- **Expected:** A `longpress` / hold event for any remote key, like `longSelect`.
+- **Actual:** `HWEvent` carries key-down/key-up (`eventKeyAction` 0/1) for keys
+  like `menu`, but long-press (`longSelect`) is only delivered to a *focused*
+  `Pressable` as `onLongPress`. Using Select would also press whatever control
+  has focus.
+- **Severity:** Low.
+- **Workaround:** Time Menu's key-down → key-up ourselves (600ms threshold,
+  ignoring repeat key-downs while held); a short press toggles the panel.
+- **Suggestion:** Emit a global long-press event per key, or document the
+  key-down/key-up timing pattern.
+
+### 11. Screenshots come back empty; `journalctl` unsupported in the dev shell
+- **Task:** Capture the app's screen and logs on the Virtual Device to verify UI
+  changes.
+- **Steps:** `screenshooter /tmp/s.png` and `gwsi-tool-screenshooter /tmp/s.png`
+  via the device shell; `journalctl` for logs.
+- **Expected:** A PNG of the screen; standard logs.
+- **Actual:** Both screenshot tools wrote **0-byte** PNGs (`screenshooter` also
+  hung until killed). `journalctl` prints "not supported in developer mode shell,
+  use loggingctl".
+- **Severity:** Low.
+- **Workaround:** Verified behavior with `inputd-cli button_press` key injection
+  plus `loggingctl log -v <package>` to confirm no crashes; visual checks still
+  need someone watching the VD window.
+- **Suggestion:** A documented `vega device screenshot` command, and an error
+  (not an empty file) when capture isn't possible.
+
 ---
 
 ## AWS (Bedrock / Lambda / API Gateway / IAM)
 
-### 10. Public Lambda Function URLs blocked on the account
+### 12. Public Lambda Function URLs blocked on the account
 - **Task:** Expose the `/ask` Lambda over HTTPS via a Function URL.
 - **Steps:** Created the Function URL (`AuthType: NONE`), added the public
   `InvokeFunctionUrl` permission; policy + auth type were correct.
@@ -142,7 +175,7 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Suggestion:** When a Function URL is blocked by an account-level control,
   return an error that *names* the control rather than a generic 403.
 
-### 11. Anthropic (Claude) access gated by Marketplace billing
+### 13. Anthropic (Claude) access gated by Marketplace billing
 - **Task:** Use Claude Haiku 4.5 via Bedrock.
 - **Steps:** Pointed the Lambda at the Claude inference profile.
 - **Expected:** Works once model access is "enabled."
@@ -157,7 +190,7 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Suggestion:** In the Bedrock Model Access UI, surface the billing/Marketplace
   prerequisite for third-party models *before* the user thinks access is granted.
 
-### 12. Lambda IAM role needs Marketplace actions for third-party model access
+### 14. Lambda IAM role needs Marketplace actions for third-party model access
 - **Task:** Invoke a Marketplace-backed model from Lambda.
 - **Steps:** Scoped the role to `bedrock:InvokeModel*` only.
 - **Expected:** Enough to invoke.
@@ -167,12 +200,26 @@ Severity scale: **Critical** (blocks shipping) · **High** (major detour) ·
 - **Suggestion:** Document that invoking Marketplace-backed Bedrock models from a
   role requires the Marketplace actions, with a ready-to-paste policy snippet.
 
-### 13. CLI session expiry mid-workflow
+### 15. CLI session expiry mid-workflow
 - **Task:** Deploy/update the Lambda across a long build session.
 - **Severity:** Low.
 - **Workaround:** Re-authenticated and re-ran; verified via a public `curl` that
   doesn't need creds.
 - **Suggestion:** N/A (environment), noted for completeness.
+
+### 16. Reserved concurrency rejected on a new account
+- **Task:** Cap the `/ask` Lambda at 5 concurrent executions as a cost guard.
+- **Steps:** `aws lambda put-function-concurrency --reserved-concurrent-executions 5`.
+- **Expected:** The cap is applied.
+- **Actual:** `InvalidParameterValueException: Specified ReservedConcurrentExecutions
+  for function decreases account's UnreservedConcurrentExecution below its
+  minimum value of [10]` — the account's total concurrency is too low to reserve
+  any.
+- **Severity:** Low.
+- **Workaround:** Rely on API Gateway stage throttling (5 req/s, burst 10) as the
+  cost cap; `deploy.sh` attempts the reservation and continues if it's refused.
+- **Suggestion:** Say in the error (or the console) that the account's
+  concurrency quota is the blocker and link to the quota increase.
 
 ---
 

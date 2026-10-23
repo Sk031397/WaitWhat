@@ -2,9 +2,9 @@
 
 > Hold one button and ask about anything you're watching. Wait, What? answers in a
 > non-blocking overlay **without pausing playback**, anchors every answer to the
-> moment you asked, lets you **navigate by natural language**, and **sees the
-> actual frames** of what you're watching — and it announces answers through
-> **VoiceView** for low-vision viewers.
+> moment you asked, lets you **navigate by natural language**, **sees the actual
+> frames** of what you're watching, surfaces **scene insights unprompted**, and
+> announces answers through **VoiceView** for low-vision viewers.
 
 Built for the **Build, Ship, Shape: Amazon Developer Hackathon** — Fire TV track
 (priority categories: *AI-enhanced viewing*, *sports*, *multi-modal UX*,
@@ -51,8 +51,8 @@ the content *and where you are in it*.
 ## Architecture
 
 ```
-Ask (focus field → system keyboard mic / type)      Natural-language nav
-        │                                             "go to the middle"
+Hold ☰ / open panel → focus field → system keyboard mic / type     Natural-language nav
+        │                                                         "go to the middle"
         ▼                                                    │
 VideoContext.snapshot()  { title, synopsis, positionSeconds, context, videoId }
  (what's on screen, where)                                   │
@@ -68,6 +68,11 @@ buildAskRequest()  ──►  POST /ask  ──►  API Gateway ──► Lambda
 SideKickOverlay (right-edge panel)  ──►  answer + timeline marker + VoiceView
         ▼
 VideoPlayer (W3C media) keeps playing — never paused
+
+Player opens ──► POST /ask {warmup:true}   (wakes a cold Lambda before the first question)
+
+Offline: extract-frames.sh ──► S3 frames ──► generateInsights.ts (scene changes →
+Nova Lite one-liners) ──► src/data/insights.ts ──► ✨ card when playback reaches each
 ```
 
 ### Why not `react-native-video`?
@@ -94,7 +99,8 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 ├── src/
 │   ├── App.tsx                # stack navigator: Home → Player (no drawer)
 │   ├── index.js               # AppRegistry.registerComponent(appName, …) from app.json
-│   ├── config.ts              # ASK_ENDPOINT (deployed backend URL)
+│   ├── config.ts              # ASK_ENDPOINT (deployed backend URL); re-exports the key
+│   ├── secrets.example.ts     # copy to secrets.ts (gitignored) and set ASK_API_KEY
 │   ├── screens/
 │   │   ├── HomeScreen.tsx      # hero header + horizontal content rows
 │   │   └── PlayerScreen.tsx    # full-screen video + controls + overlay
@@ -107,7 +113,7 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   │   ├── VideoPlayer.tsx     # W3C media wrapped in a react-native-video-like API
 │   │   └── useVideoContext.tsx # context capture + navigable timeline (markers, seek)
 │   ├── sidekick/              # THE DIFFERENTIATOR
-│   │   ├── SideKickOverlay.tsx # non-blocking slide-out answer panel
+│   │   ├── SideKickOverlay.tsx # slide-out answer panel, hold-☰ handler, insight card
 │   │   ├── QuestionInput.tsx   # TextInput → system-keyboard mic (Vega voice path)
 │   │   ├── ModeRouter.ts       # builds the grounded AskRequest
 │   │   ├── insights.ts         # when a proactive scene insight is due
@@ -117,12 +123,16 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 │   │   └── formatTime.ts
 │   ├── data/                  # catalog, shared types, generated insights.ts
 │   └── theme/                 # 10-foot scaling + colors + motion tokens
+├── test/                      # Jest unit tests (time phrases, seek intent, insights, catalog)
+├── scripts/
+│   └── extract-frames.sh      # every catalog video → a 768px frame every 2s → S3
 └── backend/                   # the AWS Builder piece
     ├── handler.ts             # Lambda: loads frames from S3 → Bedrock Nova Lite (Converse)
+    ├── deploy.sh              # update the live Lambda code/env, throttle the API, smoke test
     ├── template.yaml          # SAM reference (deployed via API Gateway + Lambda)
     ├── generateInsights.ts    # offline: frames → scene changes → Nova Lite notes
     ├── devServer.ts           # local http wrapper for the handler
-    └── test.ts                # validation, auth, and error-path checks (no AWS needed)
+    └── test.ts                # validation, auth, warm-up and error-path checks (no AWS needed)
 ```
 
 ---
@@ -141,6 +151,10 @@ underneath. App code stays idiomatic; the platform-native player does the work.
 source $HOME/vega/env
 
 npm install
+cp src/secrets.example.ts src/secrets.ts   # then set ASK_API_KEY (see Backend below)
+
+npm test        # Jest unit tests
+npm run lint
 
 # Build the app (bundles RN, runs kmmb, packages the .vpkg)
 npm run build:debug
@@ -164,9 +178,11 @@ source $HOME/vega/env && npm run build:debug
 > `vega project doctor` all-pass, `npm run build:debug` exits 0 and emits
 > `.vpkg` for armv7 / aarch64 / x86_64.
 >
-> The demo browses shows/movies on the home grid; open any title to watch.
-> Open the **Ask Wait, What?** panel, then type or (on a device) hold the Alexa
-> button to dictate a question. Try a navigation phrase like *"go to the middle"*
+> The home grid has Blender open films and a **Sports** row; open any title to watch.
+> Hold the remote's **Menu (☰)** button (or select the **Ask Wait, What?** tab) and
+> the panel opens with the question field focused; type, or on a device hold the
+> Alexa button to dictate. On Tears of Steel a ✨ scene-insight card appears at 0:10
+> without asking. Try a navigation phrase like *"go to the middle"*
 > or *"take me to 0:10 and tell me what's happening."* Open a **Sports** game to see sports mode:
 > Wait, What? re-themes and answers "catch me up" / "what just happened?" grounded on
 > what's on screen (license-clear amateur footage, no real teams).
@@ -236,7 +252,7 @@ see the screen and says so rather than guessing.
 | **Tech Implementation** | Correct Vega W3C media stack (not react-native-video), manifest media services, deployed Amazon Bedrock backend behind API Gateway + Lambda with least-privilege IAM, untrusted-input validation, honest error handling (no canned answers) |
 | **Design** | One hold-to-ask gesture, non-blocking slide-out panel, **animated focus bloom**, cinematic vignette, timeline-anchored answers with a **navigable Q&A history**, context-themed **sports mode** (accent re-theme), 10-foot scaling, accessible focus (border + scale, not color alone) |
 | **Potential Impact** | Near-universal behaviors (ask about what you're watching, catch up on a game) solved without leaving the screen — **plus an accessibility layer** (answers spoken via VoiceView for low-vision viewers) and a **content-agnostic pipeline any streaming app could embed** |
-| **Quality of the Idea** | **Talk to your timeline** — ask, navigate by natural language, revisit any question on the scrubber, answers grounded in the actual video frames, and an adaptive **sports mode** that re-themes and grounds live answers on the game. One companion that understands what you're watching *and where you are in it*. |
+| **Quality of the Idea** | **Talk to your timeline** — ask, navigate by natural language, revisit any question on the scrubber, answers grounded in the actual video frames, **scene insights that surface unprompted**, and an adaptive **sports mode** that re-themes and grounds live answers on the game. One companion that understands what you're watching *and where you are in it*. |
 
 ---
 
@@ -281,8 +297,13 @@ plain companion app would miss:
   Lambda instead — documented in the build history.)
 - **IAM** — least-privilege role scoped to `bedrock:InvokeModel*` on Nova
   models + inference profiles, and `s3:GetObject` on the media bucket.
-- **Cost guards** — API Gateway throttling (5 req/s, burst 10), Lambda
-  reserved concurrency, and a shared `x-ww-key` header.
+- **Cost guards** — API Gateway throttling (5 req/s, burst 10) and a shared
+  `x-ww-key` header. (`deploy.sh` also tries to reserve Lambda concurrency, but
+  this account's concurrency limit is too low to allow it, so throttling is the
+  cap.)
+- **Bedrock, offline** — `backend/generateInsights.ts` sends frames at each
+  detected scene change to Nova Lite once, ahead of time, to write the scene
+  insights. They ship with the app, so playback costs no extra calls.
 
 **Practices applied from AWS guidance**
 
@@ -296,10 +317,10 @@ plain companion app would miss:
 - No AWS credentials ever ship in the TV app — Bedrock is only ever called
   server-side.
 - No canned answers: failures are reported as failures.
+- A warm-up ping when the player opens keeps the first question off a cold start.
 
 ---
 
 ## License
 
 MIT-0 — see [LICENSE](LICENSE).
-# WaitWhat
