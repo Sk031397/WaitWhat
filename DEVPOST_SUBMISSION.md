@@ -122,8 +122,16 @@ AWS Builder
 ---
 
 ## "Try it out" / links
-- GitHub repo: [ PASTE REPO URL ]
+- GitHub repo: https://github.com/Sk031397/WaitWhat
 - Demo video (YouTube/Vimeo, public, <3:00): [ PASTE VIDEO URL ]
+
+## Testing instructions (judges only — NOT in the public repo)
+Build per the README. To use the live backend, create `src/secrets.ts` with:
+`export const ASK_API_KEY = '[ PASTE KEY FROM YOUR LOCAL src/secrets.ts ]';`
+then rebuild. Endpoint: the `ASK_ENDPOINT` in `src/config.ts`.
+
+## New or existing project?
+New: created during the submission window (first commit Oct 9, 2026).
 
 ---
 
@@ -208,10 +216,14 @@ the window — confirm your repo satisfies that framing before claiming it.
 ---
 
 ## Pre-submit checklist
-- [ ] Demo video public on YouTube/Vimeo, **< 3:00**, shows it running on the
-      Vega simulator, **no third-party trademarks or unlicensed music**.
-- [ ] Repo is **public + OSS license visible** OR **private + shared** with:
-      chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar.
+- [ ] Demo video public on YouTube/Vimeo, **< 3:00**, in English, shows it
+      running on the Vega simulator, **no third-party trademarks or unlicensed
+      music**. Avoid showing the wrestling clip (arena sponsor logos) and the
+      soccer clip (brand logos on the fence); credit the Blender films in the
+      video description.
+- [x] Repo is **public + OSS license visible** (MIT-0, detected by GitHub).
+      (Only if you make it private: share with knmeiss, giolaq, anishamalde,
+      mosesroth, emersonsklar.)
 - [ ] Repo has clear setup/run instructions (README covers this).
 - [ ] Product Feedback field filled (all 5 answers above).
 - [ ] Friction log pasted into its field (the ≤10% bonus).

@@ -224,6 +224,12 @@ The shared `x-ww-key` lives in `src/secrets.ts`, which is gitignored: copy
 `src/secrets.example.ts` to `src/secrets.ts` and set `ASK_API_KEY` to the same
 value the Lambda uses (`backend/deploy.sh` reads it from there).
 
+> **Judges:** the key for the live endpoint is in the Devpost submission's
+> testing instructions (kept out of this public repo). Put it in
+> `src/secrets.ts`, rebuild, and the app talks to the deployed backend. Without
+> it the app runs but shows "Couldn't reach Wait, What?" instead of answers. Or
+> deploy your own backend with the steps above.
+
 ### Bedrock access
 Enable model access for an **Amazon Nova** model in your region
 (`aws bedrock list-inference-profiles --region us-east-1` to confirm the id).
@@ -318,6 +324,23 @@ plain companion app would miss:
   server-side.
 - No canned answers: failures are reported as failures.
 - A warm-up ping when the player opens keeps the first question off a cold start.
+
+---
+
+## Credits
+
+Video content used under Creative Commons Attribution licenses:
+
+- **Sintel** (trailer) — © copyright Blender Foundation, durian.blender.org — CC BY 3.0
+- **Big Buck Bunny** (10s clip) — © copyright 2008 Blender Foundation, bigbuckbunny.org — CC BY 3.0
+- **Tears of Steel** — © copyright Blender Foundation, mango.blender.org — CC BY 3.0
+- **Cosmos Laundromat** — © copyright Blender Institute, gooseberry.blender.org — CC BY
+- **Glass Half** — © copyright Blender Institute, studio.blender.org — CC BY
+
+The films are streamed unmodified; frames extracted from them are used only to
+ground answers and generate scene insights. Sports clips are license-clear
+amateur footage hosted in the project's S3 bucket. Placeholder card art comes
+from picsum.photos (Unsplash license).
 
 ---
 
