@@ -191,14 +191,57 @@ New: created during the submission window (first commit Oct 9, 2026).
 - **Claude Code** — AI coding assistant used during development.
 
 **2) What worked well?**
-- The W3C media stack is solid once wired correctly — stable playback and clear
-  `TIME_UPDATE` / `loadedmetadata` events.
-- `vega project install` / `update-manifest` resolving OS-compatible versions and
-  the module ladder saved us from mismatches we'd never have guessed by hand;
-  `vega project doctor` gave clear, actionable validation.
-- **Amazon Nova via Bedrock Converse** was the smoothest part of the build:
-  first-party access, no Marketplace step, instant, clean API.
-- The RN 0.72 template scaffolds a correct, buildable project immediately.
+
+*Fire TV / Vega OS*
+- **Vega CLI + RN 0.72 template** — the template scaffolds a correct, buildable
+  project immediately; `vega project install` / `update-manifest` resolved
+  OS-compatible package versions and the module ladder for us; `vega project
+  doctor` gave clear, actionable validation. Once set up, `build:debug` →
+  `install-app` → `launch-app` was a reliable loop we ran dozens of times.
+- **Vega Virtual Device** — good enough to build the whole app without hardware.
+  `inputd-cli button_press` (with `--holdDuration`) made it possible to script
+  remote input, including a held Menu press, and `loggingctl log -v <package>`
+  filtered logs to just our app.
+- **React Native for Vega** — standard React Native skills carried over directly.
+  `useTVEventHandler` exposes clear key-down/key-up events (`eventKeyAction`) with
+  typed `HWEvent`s, which made a custom hold gesture easy to build.
+- **react-native-w3cmedia** — once wired correctly, playback is stable and the
+  W3C events (`loadedmetadata`, `timeupdate`) are predictable; seeking via
+  `currentTime` just works, which our natural-language navigation relies on.
+- **react-navigation for Vega** — dropped in with no surprises.
+- **Manifest services** — declaring media, audio and IME services in
+  `manifest.toml` is explicit and easy to reason about.
+- **System keyboard mic** — gives real voice input with no extra code: a focused
+  `TextInput` is all it takes.
+- **VoiceView** — `AccessibilityInfo.announceForAccessibility` is a one-line way to
+  make every answer and scene insight spoken for low-vision viewers.
+
+*AWS*
+- **Amazon Bedrock (Nova Lite, Converse)** — the smoothest part of the build.
+  First-party access with no Marketplace step; one Converse call takes text and
+  images together, so adding real frames was a few lines. Answers come back in
+  about 1.2–3.5s with 4 frames attached. Cross-region inference profiles helped
+  availability, and explicit `maxTokens` kept it fast.
+- **Amazon S3** — simple fit for frames: `aws s3 sync` uploaded ~900 images in one
+  command, and per-request `abortSignal` timeouts on `GetObject` let us skip slow
+  frames instead of blocking an answer.
+- **AWS Lambda** — warm invocations answer our warm-up ping in ~0.13s;
+  `aws lambda wait function-updated` made scripted deploys safe.
+- **Amazon API Gateway (HTTP API)** — worked immediately when Function URLs
+  didn't; stage throttling is a single command and became our cost cap.
+- **AWS IAM** — easy to scope tightly (Nova models only, `frames/*` only).
+- **AWS CLI / SAM** — the whole deploy (code, env, throttling, smoke test) fits in
+  one short shell script.
+
+*Build and quality tools*
+- **TypeScript** — caught integration mistakes across app and backend before
+  every build; **Jest** made the time-phrase and insight-timing logic easy to pin
+  down with tests; **ESLint + Prettier** kept the codebase consistent with
+  auto-fix.
+- **ffmpeg** — frame extraction and scene-change detection (`select=gt(scene,…)`)
+  in one tool, scriptable end to end.
+- **Mermaid** — GitHub renders the architecture diagram straight from the README.
+- **Claude Code** — sped up refactors, docs and deployment scripting.
 
 **3) What needs work?** (summary — full detail in the friction log below)
 - **No app-level speech-to-text** and **no app-level TTS** — the two biggest gaps
