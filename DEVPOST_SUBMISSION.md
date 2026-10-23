@@ -138,23 +138,57 @@ New: created during the submission window (first commit Oct 9, 2026).
 ## PRODUCT FEEDBACK  (required field — this is what earns the ≤10% bonus; answer all 5)
 
 **1) Which developer tools, APIs, and SDKs did you use, and for what?**
-- `@amazon-devices/react-native-w3cmedia` — video playback (W3C MSE/EME) on Vega.
-- `@amazon-devices/react-navigation__*` — Vega-native stack navigation.
-- Vega CLI (`vega project install` / `update-manifest` / `doctor`, `vega
-  run-app`) + the RN 0.72 template — scaffold, manifest/module management, build,
-  and deploy to the Vega Virtual Device.
-- Vega manifest services — media, audio, network, and the system IME
+
+*Fire TV / Vega OS*
+- **Vega SDK 0.24 + Vega CLI** (`vega project install` / `update-manifest` /
+  `doctor`, `npm run build:debug` → `react-native build-vega`, `vega run-app`,
+  `vega device install-app` / `launch-app`) — scaffolding from the RN 0.72
+  template, manifest and module management, building the `.vpkg` for armv7 /
+  aarch64 / x86_64, and installing on the device.
+- **Vega Virtual Device** (`vega virtual-device start`) — running and testing the
+  app; `inputd-cli` to inject remote key presses and `loggingctl` to read app
+  logs while testing.
+- **React Native for Vega** (`@amazon-devices/react-native-kepler`, RN 0.72) —
+  the app UI, 10-foot focus handling, and `useTVEventHandler` for remote key
+  events (detecting a held Menu button to open the ask panel).
+- **`@amazon-devices/react-native-w3cmedia`** (W3C MSE/EME `VideoPlayer` +
+  `KeplerVideoSurfaceView`) — video playback, seeking and progress events, wrapped
+  in a react-native-video-style component.
+- **`@amazon-devices/react-navigation__native` / `__stack`** — Home → Player
+  navigation.
+- **Vega manifest services** — media server/buffer/transform services and media
+  controls for playback; audio services; the system IME
   (`com.amazon.inputmethod.service`) for the keyboard-mic voice path.
-- **Amazon Bedrock (Nova Lite)** via `@aws-sdk/client-bedrock-runtime` Converse
-  API — the grounded Q&A answers, with real video frames as input.
-- **Amazon S3** — hosts the sports clips and the extracted video frames.
-- `useTVEventHandler` (`@amazon-devices/react-native-kepler`) — remote key
-  events, used to detect a held Menu button.
-- **ffmpeg** — frame extraction and scene-change detection for the insights.
-- **AWS Lambda + API Gateway (HTTP API) + IAM** — the serverless `/ask` endpoint
-  with least-privilege permissions.
-- **VoiceView** (via `AccessibilityInfo.announceForAccessibility`) — spoken
-  answers for low-vision viewers.
+- **System keyboard mic** (focused `TextInput` + hold the Alexa button) — voice
+  input, since Vega has no app-level speech-to-text API.
+- **VoiceView** via `AccessibilityInfo.announceForAccessibility` and live regions —
+  reading answers and scene insights aloud for low-vision viewers.
+
+*AWS (AWS Builder)*
+- **Amazon Bedrock — Nova Lite via the Converse API**
+  (`@aws-sdk/client-bedrock-runtime`, cross-region profile
+  `us.amazon.nova-lite-v1:0`) — live answers grounded on the title, synopsis,
+  playback position, recent exchanges, and the last 4 real video frames sent as
+  image blocks; also used offline to write the one-line scene insights.
+- **Amazon S3** (`@aws-sdk/client-s3`) — hosts the sports clips and posters, and a
+  768px frame every 2s of every video, which the Lambda reads at question time.
+- **AWS Lambda** (Node.js) — the `/ask` handler: validates the request, checks the
+  shared key, loads frames, calls Bedrock, answers a warm-up ping.
+- **Amazon API Gateway (HTTP API)** — the public HTTPS `/ask` endpoint with CORS
+  and stage throttling (5 req/s, burst 10) as the cost cap.
+- **AWS IAM** — least-privilege role: `bedrock:InvokeModel*` on Nova models and
+  inference profiles, `s3:GetObject` on `frames/*` only.
+- **AWS CLI** — deploying code and environment, throttling, and smoke tests
+  (`backend/deploy.sh`); **AWS SAM** template as the reproducible definition.
+
+*Build and quality tools*
+- **TypeScript**, **Jest + ts-jest** (app unit tests), a small ts-node test
+  harness (backend validation, auth, warm-up and error paths), **ESLint +
+  Prettier**.
+- **ffmpeg** — extracting frames from every video and detecting scene changes for
+  the insights.
+- **Mermaid** — the architecture diagram in the README.
+- **Claude Code** — AI coding assistant used during development.
 
 **2) What worked well?**
 - The W3C media stack is solid once wired correctly — stable playback and clear
